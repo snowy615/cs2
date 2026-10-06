@@ -11,6 +11,8 @@
 - [0.2 Map of the course](#02-map-of-the-course)
 - [0.3 How it all ties together: one problem, many implementations](#03-how-it-all-ties-together-one-problem-many-implementations)
 - [0.4 Which tool when?](#04-which-tool-when)
+- [0.5 The big takeaways](#05-the-big-takeaways-if-you-remember-nothing-else)
+- [0.6 How to reason about a concurrent program (exam recipe)](#06-how-to-reason-about-a-concurrent-program-exam-recipe)
 
 **Part I — Foundations**
 1. [Introduction: Threads, Interleaving and Races](#1-introduction-threads-interleaving-and-races)
@@ -43,7 +45,7 @@
 
 17. [Patterns of Concurrent Programming](#17-patterns-of-concurrent-programming)
 18. [Problem Sheet Highlights (worked solutions)](#18-problem-sheet-highlights-worked-solutions)
-19. [Cheat Sheets: SCL API, Glossary, Pitfalls](#19-cheat-sheets-scl-api-glossary-pitfalls)
+19. [Cheat Sheets: SCL API, Glossary, Pitfalls, Concepts not to confuse](#19-cheat-sheets-scl-api-glossary-pitfalls)
 
 ---
 
@@ -139,11 +141,49 @@ The best way to see how the tools relate is that the course implements the **sam
 | Need to wake a *particular kind* of waiting thread | `Lock` + **multiple conditions**, or semaphores with **passing the baton** |
 | Need FIFO / selective wake-ups | One semaphore per waiting thread (**selective passing the baton**) |
 
+## 0.5 The big takeaways (if you remember nothing else)
+
+1. **Correct for every interleaving.** You can't test your way to correctness; you need an argument.
+2. **No memory races.** Any two accesses to the same variable (not both reads) must be separated by a **synchronisation**. This also makes caching and compiler reordering harmless.
+3. **Happens-before is your proof tool.** Chains of program order + communications (+ lock/semaphore handovers) show that one action precedes another.
+4. **Encapsulate concurrency** in a few objects (servers, monitors, concurrent datatypes) so that reasoning is local. Their correctness criterion is **linearizability**.
+5. **Check-then-act is a race** (TOCTTOU). Combine check and act into one atomic operation (total ops return `Option`; partial ops block).
+6. **Waiting:** never busy-wait; always `while(!cond) wait()` / `await(test)`; remember who could be woken by each signal.
+7. **Signals:** a condition `signal` with no waiter is **lost**; a semaphore `up` is **remembered**; an extra binary `up` is a **lost signal**.
+8. **Deadlock = cycle of waiting.** Break it by ordering resources, limiting entry, asymmetry, or back-off. Blocking operations need **termination detection**.
+9. **Liveness and fairness matter too:** starvation (readers/writers), unfair `alt`s, competing blocked clients.
+10. **Communication is expensive.** Balance granularity (bag of tasks), count **messages and rounds**, and remember that more threads isn't automatically faster.
+
+## 0.6 How to reason about a concurrent program (exam recipe)
+
+1. **List the shared state** and, for each variable, *which threads may read/write it, and in which phases*.
+2. **State invariants** (e.g. "`pending` non-empty ⇒ no resource free"; "`writers ≤ 1 ∧ (readers = 0 ∨ writers = 0)`"); check each operation preserves them, under mutual exclusion.
+3. **Show the synchronisation** between conflicting accesses with happens-before chains ($`\prec`$ / $`\preceq`$).
+4. **Safety:** argue nothing bad happens in *any* interleaving. Look for check-then-act gaps and lost or misdirected signals.
+5. **Deadlock freedom:** show no **cycle** of threads waiting for each other (and that no thread waits for a signal that can no longer be sent).
+6. **Liveness / fairness:** can someone wait forever while others progress (starvation)? Is the `alt` fair?
+7. **Termination:** do all threads (including servers) eventually stop? Are channels closed / servers shut down?
+8. **Cost:** count total messages and the longest chain (rounds); consider contention and bottlenecks.
+9. **Testing plan:** compare with a sequential version; log with conservative intervals; use the linearizability tester for datatypes.
+
 ---
 
 # Part I — Foundations
 
 ## 1. Introduction: Threads, Interleaving and Races
+
+> [!NOTE]
+> **📖 Key definitions**
+> - **Thread:** a single sequential flow of control. Threads in the same process **share memory**.
+> - **Process:** one or more threads with their own **protected address space**; processes communicate via the OS (expensive).
+> - **Atomic action:** an action that happens **indivisibly**; no other thread can observe it half-done. *Example:* one load or one store of an `Int`. *Non-example:* `x = x+1`, which is three actions (load, add, store).
+> - **Interleaving:** one possible execution: a single sequence merging every thread's atomic actions while keeping each thread's own order.
+> - **Independent actions:** $`a`$ and $`b`$ are independent if doing $`a;b`$ or $`b;a`$ always gives the same result. *Independent:* two reads of `x`; writes to different variables. *Not independent:* a read and a write of `x`; two writes of `x`.
+> - **Race condition:** two non-independent actions can happen in either order and **at least one order gives a wrong result**.
+> - **Memory (data) race:** two threads access the same location, **at least one writes**, and there is **no synchronisation** between the accesses. This course forbids all memory races.
+> - **Synchronisation:** an event that forces an order between actions of different threads: a channel communication, a lock release followed by acquire, a signal received by a waiter, a semaphore `up` consumed by `down`, a barrier.
+> - **Safety property:** "nothing bad ever happens" (e.g. never two writers in the database). A violation is visible in a *finite* prefix of the execution.
+> - **Liveness property:** "something good eventually happens" (e.g. every request is answered). Violated only by *infinite* behaviour (deadlock, starvation, livelock).
 
 ### 1.1 Processes vs. threads
 - A **thread** is a single sequentially executing program. Several threads can share one **address space** and communicate through **shared memory**: low communication overhead, cheap context switches.
@@ -225,9 +265,34 @@ can read a stale `answer`. (It might even loop forever if the read of `done` is 
 - **Liveness / progress:** something good eventually happens; the system does something useful.
 - **Latency:** requests are served quickly. **Throughput:** many requests are handled.
 
+> [!TIP]
+> **✅ Key takeaways**
+> 1. A concurrent program must be correct for **every** interleaving. There are $`\binom{m+n}{m}`$ of them, so testing only ever samples a few.
+> 2. Races come from **non-independent actions with no synchronisation between them**. The cure is always synchronisation, never luck or timing.
+> 3. Without synchronisation, a thread may see another thread's writes **late, never, or in a different order** (caches + compiler reordering). The Java Memory Model only promises sensible behaviour for **race-free** programs.
+> 4. Concurrency is used for **speed**, for **structuring multi-task systems**, and because **distributed systems** are inherently concurrent. Speed is not guaranteed: coordination costs.
+> 5. Correctness has two halves: **safety** (nothing bad) and **liveness** (something good happens). Also consider **latency** and **throughput**.
+
+> [!WARNING]
+> **⚠️ Common misconceptions & errors**
+> - ❌ "`x = x+1` is a single step." ✅ It's load, add, store; two threads can interleave and **lose an update**.
+> - ❌ "My test passed 1000 times, so there's no race." ✅ Bad interleavings can be extremely rare. You need an *argument* (synchronisation, invariants).
+> - ❌ "Once thread A writes `x`, thread B immediately sees it." ✅ Not without synchronisation: B may read a stale cached value forever.
+> - ❌ "Statements run in the order I wrote them, as seen by other threads." ✅ The compiler/CPU may reorder independent statements (`answer = v; done = true` can become `done = true; answer = v`).
+> - ❌ "Spinning on a flag (`while(!done){}`) is a valid way to wait." ✅ It's wrong under the JMM (the JIT can hoist the read, so it loops forever) **and** wastes CPU. Use proper blocking.
+> - ❌ "Reads are always safe." ✅ Read + read is safe; a read **concurrent with a write** is a race.
+> - ❌ "More threads = faster." ✅ Communication and coordination can dominate.
+
 ---
 
 ## 2. SCL Basics
+
+> [!NOTE]
+> **📖 Key definitions**
+> - **`ThreadGroup`:** a *description* of zero or more threads. Nothing runs until you `run` or `fork` it.
+> - **`run(p)`:** execute `p` and **block the caller until every thread in `p` has terminated**.
+> - **`fork(p)`:** start `p` in the background and **return immediately** (used to start server threads).
+> - **`p || q`:** parallel composition; it terminates when **both** have terminated.
 
 SCL is Gavin Lowe's library, based on Bernard Sufrin's CSO (Communicating Scala Objects).
 
@@ -246,11 +311,28 @@ scalac -classpath .:path/to/ox Race.scala
 scala  -classpath .:path/to/ox Race
 ```
 
+> [!WARNING]
+> **⚠️ Common misconceptions & errors**
+> - ❌ "Writing `def p = thread{...}` starts a thread." ✅ It only builds a description; `run`/`fork` starts it (and each `run` of a `def` creates **fresh** threads).
+> - ❌ "`run(server)` is how to start a server." ✅ A server loops forever, so `run` would never return. Use `fork`.
+> - ❌ "`p || q` finishes when either finishes." ✅ It waits for **both**. A single thread blocked forever means `run` hangs.
+
 ---
 
 # Part II — Message Passing
 
 ## 3. Channels
+
+> [!NOTE]
+> **📖 Key definitions**
+> - **Channel:** a FIFO link carrying values from an output port to an input port. Values arrive **in the order sent**.
+> - **Synchronous channel (`SyncChan`):** a send and its receive happen **at the same moment** (a *rendezvous*); whichever arrives first **blocks** until the other arrives. Capacity 0.
+> - **Buffered channel (`BuffChan(k)`):** a send completes immediately if fewer than $`k`$ messages are waiting, and **blocks only when the buffer is full**; a receive blocks only when it's empty.
+> - **InPort `??[A]` / OutPort `!![A]`:** the receiving / sending end, named from the **thread's** point of view.
+> - **`out.endOfStream`:** the *sender* says "no more data". A sync channel closes; a buffered one closes once drained.
+> - **`in.close`:** close the channel completely (often a *receiver* saying "I won't accept more").
+> - **`Stopped`:** the exception family (`Closed`, `AltAbort`) meaning "this communication can never happen". `repeat`, `attempt` and `serve` catch it and end cleanly.
+> - **CSP (Communicating Sequential Processes):** a style where sequential components share **nothing** and interact **only** by message passing.
 
 ### 3.1 The idea
 Components (threads) **communicate only through channels**, the **CSP** (Communicating Sequential Processes) paradigm. Since no variables are shared, there are no memory races, and reasoning is local. Message passing is also *necessary* for distributed systems.
@@ -333,9 +415,33 @@ def alts[A](in: ??[A], out: !![A]) = thread{
 }
 ```
 
+> [!TIP]
+> **✅ Key takeaways**
+> 1. Pure message passing ⇒ **no shared variables ⇒ no memory races**, and each component can be reasoned about on its own.
+> 2. **Synchronous** channels tie the states of sender and receiver together (easy reasoning). **Buffered** channels decouple their speeds (performance) but lose that guarantee.
+> 3. Model end-of-data by **closing channels**. A component that sees a closed channel should **close its other channels** so termination ripples through the whole network.
+> 4. Generic components should assume **as little as possible** about the order in which their environment communicates (`tee` that outputs in either order).
+
+> [!WARNING]
+> **⚠️ Common misconceptions & errors**
+> - ❌ "A send on a buffered channel never blocks." ✅ It blocks when the buffer is **full**.
+> - ❌ "After `c!v` returns, someone has received `v`." ✅ True only for **synchronous** channels.
+> - ❌ "`endOfStream` on a buffered channel throws away buffered messages." ✅ Receivers can still drain the buffer.
+> - ❌ "`repeat` catches any exception." ✅ Only `Stopped` (e.g. `Closed`). Other exceptions propagate.
+> - ❌ Forgetting to close downstream channels. ✅ The downstream thread then waits forever and `run` **never returns**.
+> - ❌ A `tee` that always outputs `out1` then `out2`. ✅ It deadlocks if the environment reads `out2` first.
+
 ---
 
 ## 4. Using Channels: Quicksort, Happens-Before, Disciplined Interaction
+
+> [!NOTE]
+> **📖 Key definitions**
+> - **Happens-before $`a \preceq a'`$:** in a given execution, $`a'`$ occurs after or at the same time as $`a`$. Generated by: (1) program order within a thread ($`\prec`$); (2) a send happens before its receive; (3) on a **synchronous** channel, the send and receive happen together ($`\equiv`$).
+> - **Strictly before $`a \prec a'`$:** $`a \preceq a'`$ and not simultaneous.
+> - **Totally ordered chain:** $`m_1 \prec m_2 \prec \dots \prec m_k`$. Its length measures *sequential time*.
+> - **Data-less channel:** `Chan[Unit]`, used purely to synchronise.
+> - **Rule of disciplined interaction:** if two threads access a variable (not both only reading), there must be a synchronisation **after the first's last access and before the second's first access**.
 
 ### 4.1 Concurrent Quicksort (recursive network)
 **Goal:** read a stream of `Int`s (end signalled by closing), output it sorted, then close.
@@ -439,9 +545,32 @@ def q(mid: ??[Person]) = thread{ while(true){ val pers = mid?(); println(pers.na
 
 **Objects vs. threads:** both are modules. Objects usually have one active at a time and communicate by procedure calls (passing data *and control*). Threads are all active at once and communicate by messages (passing *data*).
 
+> [!TIP]
+> **✅ Key takeaways**
+> 1. To prove that a read sees a write (or that something happens in order), build a **happens-before chain**: write $`\prec`$ send $`\preceq`$ receive $`\prec`$ read.
+> 2. If two actions are **not related** by $`\preceq`$, they can happen in **either order**, so check that both orders are fine.
+> 3. A channel communication also synchronises **memory**: writes before it are visible after it (JMM).
+> 4. Sharing variables is OK **if** the accesses happen in phases separated by synchronisation, and you state who may access what, when.
+> 5. Sending an object sends a **reference**, so that's sharing too.
+
+> [!WARNING]
+> **⚠️ Common misconceptions & errors**
+> - ❌ "$`\preceq`$ is a partial order." ✅ It's a **preorder**: a sync send and receive satisfy $`a \preceq a'`$ and $`a' \preceq a`$ with $`a \neq a'`$.
+> - ❌ "On a buffered channel the receive also happens before the send." ✅ Only send $`\preceq`$ receive.
+> - ❌ "Two threads can share a variable as long as they don't touch it at exactly the same instant." ✅ They need a **synchronisation** between the accesses, otherwise caches/reordering break it.
+> - ❌ "`mid!pers` copies the object." ✅ It sends a reference; mutating `pers` afterwards races with the receiver. Send a fresh or copied object.
+> - ❌ "A `SyncChan` works as a mutual-exclusion token just like `BuffChan(1)`." ✅ The last thread's final `c!()` has no receiver and **blocks forever**.
+
 ---
 
 ## 5. Numerical Integration: Workers and a Controller
+
+> [!NOTE]
+> **📖 Key definitions**
+> - **Data parallelism:** every worker runs the **same code** on a **different part** of the data.
+> - **Farm (controller + workers):** a controller (*farmer*) splits the work, sends one piece to each worker, and combines the results.
+> - **Trapezium rule:** $`\int_a^b f \approx \big(\tfrac{f(a)+f(b)}{2} + \sum_{i=1}^{n-1} f(a+i\delta)\big)\delta`$ with $`\delta = (b-a)/n`$.
+> - **Speed-up / efficiency** *(standard terms, useful for analysis):* $`S(p) = T_1/T_p`$, $`E(p) = S(p)/p`$.
 
 ### 5.1 The trapezium rule
 Split $`[a,b]`$ into $`n`$ intervals of width $`\delta = (b-a)/n`$:
@@ -510,9 +639,31 @@ with random polynomials, random $`a,b,n`$, nWorkers, repeated millions of times.
 
 **Lesson:** *communication is expensive; the channel can be a bottleneck.*
 
+> [!TIP]
+> **✅ Key takeaways**
+> 1. Per-worker **computation shrinks** like $`1/p`$ but **communication grows** like $`p`$, so there's an optimal number of workers that depends on problem size.
+> 2. **Communication is expensive**: a shared channel can become the bottleneck.
+> 3. Test a concurrent program **against a sequential one**, with random inputs, many times. For floating point, compare **approximately**.
+> 4. Performance results are noisy: control the environment and use statistics (means + confidence intervals).
+
+> [!WARNING]
+> **⚠️ Common misconceptions & errors**
+> - ❌ "The concurrent and sequential answers must be bit-identical." ✅ The controller adds results in **arrival order**, and floating-point `+` is **not associative**.
+> - ❌ "`require(n*delta == right-left)`" ✅ This fails because of rounding; use a tolerance.
+> - ❌ "Best number of workers = number of cores." ✅ For small problems it's fewer; for big ones slightly more can help load balancing.
+> - ❌ "Buffering always helps." ✅ Here it barely mattered with a sensible worker count (buffer size 1 was even slower).
+
 ---
 
 ## 6. The Bag of Tasks Pattern
+
+> [!NOTE]
+> **📖 Key definitions**
+> - **Load balancing:** spreading work so that **no worker sits idle** while others are still busy.
+> - **Bag of tasks:** a pool of many small tasks (many more than workers). Each worker repeatedly **takes a task when it's free**, so faster workers automatically do more.
+> - **Bag of tasks with replacement:** workers may **add new tasks** to the bag (e.g. split an interval in two).
+> - **Task granularity:** how much work one task contains.
+> - **Encapsulation (concurrent object):** hiding a concurrency design decision inside one object whose methods are safe to call concurrently, so reasoning is **local**.
 
 ### 6.1 Why not equal shares?
 Equal shares only work if every worker has its own equally fast, equally loaded processor and you know what "equal" means. Otherwise use **more, smaller tasks than workers**: a worker gets a new task whenever it finishes, so faster workers do more. That's **load balancing for free**.
@@ -585,9 +736,35 @@ def apply(): Double = {
 ### 6.5 Bag of tasks with replacement
 Workers may put **new tasks back into the bag**, e.g. **adaptive quadrature**: estimate $`\int_a^{mid}`$, $`\int_{mid}^b`$ and $`\int_a^b`$ with single trapezia; if the first two sum to within $`\varepsilon`$ of the third, accept; otherwise return the two halves to the bag. Concurrent BFS (§11) and bag-of-tasks quicksort (§17) are also of this form. **Termination is the hard part:** stop when the bag is empty *and* no worker is busy (could still add tasks). See the full solution in §18.
 
+> [!TIP]
+> **✅ Key takeaways**
+> 1. **Granularity trade-off:** tasks too big ⇒ poor load balancing; tasks too small ⇒ communication dominates (in the experiments, ~2 ms per task was the threshold).
+> 2. Split a controller that does two independent jobs into **two threads** (distributor + collector): it's simpler and avoids a bottleneck.
+> 3. **Encapsulate** the bag and the collector as objects; the worker code doesn't care how they're implemented.
+> 4. With replacement, **termination** needs: bag empty **and** no worker busy (a busy worker might still add tasks).
+
+> [!WARNING]
+> **⚠️ Common misconceptions & errors**
+> - ❌ "An equal split is always best." ✅ Only if processors are equally fast and equally loaded, and you know what "equal" means.
+> - ❌ "When `run(workers)` returns, the collector has finished." ✅ The collector is a separate forked thread that may still be adding the **last** result. Get the result through a channel (`resultChan`), not a field.
+> - ❌ "With replacement: bag empty ⇒ done." ✅ A worker still processing a task may put more tasks in.
+> - ❌ "The smaller the tasks, the better the balance, so make them tiny." ✅ Workers then spend most of their time communicating (< 1% computing in one experiment).
+
 ---
 
 ## 7. Alternation: `alt` and `serve`
+
+> [!NOTE]
+> **📖 Key definitions**
+> - **`alt`:** wait until **one of several** ports is ready, communicate on it, and run that branch.
+> - **Guard:** boolean condition on a branch; it's evaluated **once** per `alt` (once per iteration of `serve`) and must have **no side effects**.
+> - **Feasible branch:** guard true **and** port open. **Ready branch:** feasible **and** the other side is ready to communicate now.
+> - **`AltAbort`:** thrown when **no** branch is feasible.
+> - **`serve`:** a repeated `alt` that is **fair**: it resumes checking after the last branch chosen.
+> - **Fairness:** if an option is **continually possible**, it **eventually** happens. This is *not* the same as equal shares.
+> - **Deadlock:** a set of threads **each blocked waiting for another thread in the set**, so none can ever proceed (typically a **cycle of waiting**, as in dining philosophers).
+> - **Starvation:** some thread waits forever although the rest of the system keeps making progress.
+> - **Livelock** *(standard term):* threads keep acting (e.g. pick up a fork, time out, put it down, retry) but make no progress. A risk with the timeout solution if everyone retries in lock-step.
 
 ### 7.1 Why
 So far a thread can only wait on **one** channel. `alt` waits until **any one** of several ports is ready.
@@ -710,9 +887,34 @@ log.writeToFileOnShutdown("philsLog.txt")   // useful if the program deadlocks a
 ```
 Each thread logs into a **thread-local** log with timestamps (no races, fast); `get` merges by timestamp. This assumes clocks are loosely synchronised across cores (OK on Linux; on Windows use `SharedLog`).
 
+> [!TIP]
+> **✅ Key takeaways**
+> 1. `alt`/`serve` give **choice**: a thread can react to whichever event happens first. Guards make branches conditional on local state.
+> 2. Prefer **`serve`** for long-running loops: it's fair; `repeat{ alt(...) }` can starve later branches.
+> 3. Output branches (`=!=>`) plus continuations (`==>`) let you send in either order without spawning threads.
+> 4. Deadlock = **circular waiting**. Break the cycle: **asymmetry** (one right-handed philosopher), **limit entry** (butler allows $`N-1`$), or **back off** (timeouts).
+> 5. Use **logging** (thread-local, timestamped) rather than `println`, and log to a file on shutdown to debug deadlocks.
+
+> [!WARNING]
+> **⚠️ Common misconceptions & errors**
+> - ❌ "If no branch is ready, `alt` throws." ✅ It **waits**. It throws `AltAbort` only if **no branch is feasible**.
+> - ❌ "Guards are re-checked continuously while the `alt` waits." ✅ Each guard is evaluated **once** per `alt`. Guards should depend only on the thread's own local state.
+> - ❌ "`repeat{ alt(...) }` is fair." ✅ It always tests branches in order, so the first can starve the rest. Use `serve`.
+> - ❌ "Fair means equal shares." ✅ 99%/1% can be fair; fairness only promises *eventually*.
+> - ❌ Using the same port in two `alt`s at once, or both ends of a channel in `alt`s. ✅ Forbidden (detected at run time).
+> - ❌ "If it deadlocks, my tests will catch it immediately." ✅ Dining philosophers can run a long time before deadlocking.
+> - ❌ "`alt` is cheap, so use it everywhere." ✅ It's heavyweight. If a fixed order works, use it.
+
 ---
 
 ## 8. Clients and Servers
+
+> [!NOTE]
+> **📖 Key definitions**
+> - **Server:** a thread that **owns some state privately** and repeatedly services **requests** from clients.
+> - **Client:** a thread that sends a request and (usually) waits for a **reply**.
+> - **Reply channel:** where the server sends the answer. It can be **one per client** (fixed number of clients) or **one per request** (sent inside the request; any number of clients).
+> - **False positive (testing):** the test reports an error that didn't happen. **False negative:** the test misses an error that did happen.
 
 ### 8.1 The pattern
 A **server** is a thread that repeatedly handles **requests** from **clients**. It owns its state privately, so **no races**. It's used for concurrent datatypes, in operating systems, and everywhere in networked systems.
@@ -830,9 +1032,32 @@ private case object Shutdown extends Request
 requestChan?() match{ case Acquire(rc) => ...; case Return(r) => ...; case Shutdown => ... }
 ```
 
+> [!TIP]
+> **✅ Key takeaways**
+> 1. A server serialises access to its state: **only the server touches it ⇒ no races**. Declare the state **inside** the server thread.
+> 2. Three policies when a request can't be met: **reply `None`** (client decides), **queue the request** (explicit FIFO, fairer), or **block it with a guard** (simplest; clients compete, so less fair).
+> 3. Provide **`shutdown`** so the server thread terminates.
+> 4. When testing with logs, make the logged interval a **subset** of the real one: log "got" **after** acquiring and "returning" **before** returning. That avoids false positives.
+> 5. Splitting request from response gives **asynchrony**: the client can work while waiting.
+
+> [!WARNING]
+> **⚠️ Common misconceptions & errors**
+> - ❌ "One shared reply channel for all clients is fine." ✅ Replies could go to the **wrong client**. Use per-client or per-request reply channels.
+> - ❌ "Log the return after actually returning." ✅ Another client may log acquiring the resource first, giving a **false positive**.
+> - ❌ "Queueing pending requests can't deadlock." ✅ If all resources are held and every holder requests more, everyone waits forever.
+> - ❌ "The server stops by itself when clients finish." ✅ It loops forever unless shut down.
+
 ---
 
 ## 9. Interacting Peers
+
+> [!NOTE]
+> **📖 Key definitions**
+> - **Interacting peers:** many threads running **the same code**, exchanging messages to solve a problem together.
+> - **Total messages:** the overall communication cost.
+> - **Rounds:** the length of the **longest totally ordered chain** of messages. This measures **time** (messages in parallel don't add up).
+> - **Contention:** several threads trying to use the same channel or thread at once, so some must wait.
+> - **Topologies:** centralised (star), symmetric (complete graph), ring, binary tree (heap layout: children of $`i`$ are $`2i+1`$, $`2i+2`$).
 
 ### 9.1 The setting
 Many threads run the **same code** and exchange messages. **Running example:** each node $`i`$ holds $`x_i`$, and at the end every node must hold $`\sum_i x_i`$.
@@ -957,11 +1182,36 @@ The tree gets the best of both: few messages **and** few rounds.
 
 **Testing:** each thread picks a random `x`, writes it to `xs(me)`, gets the sum into `results(me)` (indexed by thread ⇒ no races), then `assert(results.forall(_ == xs.sum))`.
 
+> [!TIP]
+> **✅ Key takeaways**
+> 1. Always judge a protocol by **both** messages and rounds (table in §9.7). The **tree** gets few messages ($`2(n-1)`$) **and** few rounds ($`O(\log n)`$).
+> 2. Prove correctness with an **invariant** about what each node's partial value represents (e.g. "the ring token from node $`i`$ is $`\sum_{j \le i} x_j`$").
+> 3. **Contention** can secretly make things sequential; **stagger** the send order (`(me+i) % n`).
+> 4. If **every** node starts by sending, synchronous channels **deadlock**. Use buffers or send and receive in parallel.
+
+> [!WARNING]
+> **⚠️ Common misconceptions & errors**
+> - ❌ "Fewer messages ⇒ faster." ✅ The centralised protocol has few messages but they're all sequential ($`2(n-1)`$ rounds).
+> - ❌ "The symmetric protocol automatically takes $`n-1`$ rounds." ✅ Only once contention is removed; with everyone sending to node 0 first, the chain is $`2n-3`$.
+> - ❌ "Ring protocol 2 works with `SyncChan`." ✅ Everyone does `out!x` first, so they all block: **deadlock**. Buffer size 1 is needed.
+> - ❌ "The tree protocol's up/down channels are indexed by parent." ✅ They're indexed by the **child** (`up(i)` links node `i` and its parent).
+
 ---
 
 # Part III — Concurrent Datatypes & Synchronous Parallelism
 
 ## 10. Concurrent Datatypes and Linearizability
+
+> [!NOTE]
+> **📖 Key definitions**
+> - **Concurrent datatype:** a datatype (queue, set, …) that many threads can use at once, whose operations **appear to happen one at a time**.
+> - **Total operation:** always returns; signals "precondition false" with a special value (`None`, `null`, exception). *E.g.* `dequeue(): Option[T]`.
+> - **Partial operation:** **blocks** until its precondition holds. *E.g.* `dequeue(): T` waits until the queue is non-empty.
+> - **History:** the record of every operation's **call** and **return** (with results) in one execution.
+> - **Linearization point:** the instant, **between an operation's call and its return**, at which it appears to take effect.
+> - **Linearizable:** every history can be explained by choosing linearization points so that the operations, run **sequentially in that order**, give exactly the observed results under the **sequential specification**.
+> - **Sequential specification:** an immutable, deterministic model of the datatype, given as `seqOp: S => (A, S)`.
+> - **TOCTTOU** (time-of-check to time-of-use): acting on a check whose result may be **out of date** by the time you act.
 
 ### 10.1 Why datatypes?
 A **concurrent datatype** (queue, stack, set, map, …) can be safely used by many threads at once; operations appear to happen **one at a time, without interference**. Users barely think about concurrency; the implementer reasons **locally** about one object. **Datatype-based concurrent programming** puts all the concurrency into a few reusable datatypes.
@@ -1071,9 +1321,33 @@ object QueueTest{
 - **Control the search space:** the tester explores all sequential states reachable by reordering concurrent operations; for a queue that's exponential in its length. So keep queues short (here dequeues are more frequent than enqueues).
 - `tsLog = false` uses a non-timestamp log (for OSes without good timestamps).
 
+> [!TIP]
+> **✅ Key takeaways**
+> 1. Thread-safe pieces don't compose: `if(!q.isEmpty) q.dequeue()` is a **TOCTTOU race**. Make check-and-act **one** operation (a total `dequeue` returning `Option`, or a partial one that blocks).
+> 2. **Linearizability** is *the* correctness criterion for concurrent datatypes. Operations may overlap in time, but each must appear atomic at some point inside its call–return interval.
+> 3. If op A **returns before** op B is **called**, A must be linearized before B. Only **overlapping** ops may be reordered.
+> 4. Server-based datatypes must use **synchronous** channels; the communication **is** the linearization point.
+> 5. **Test** with the linearizability tester: random ops, immutable spec, results compared by `==`, and keep the state space small.
+
+> [!WARNING]
+> **⚠️ Common misconceptions & errors**
+> - ❌ "Linearizable means operations never overlap." ✅ They can overlap; they just *appear* to take effect instantaneously.
+> - ❌ "The linearization point is the call (or the return)." ✅ It can be **anywhere** between them.
+> - ❌ "If ops overlap at all, any order is allowed." ✅ Only orders consistent with real-time order of **non-overlapping** ops, **and** valid for the spec.
+> - ❌ "Buffered channels are fine inside a server-based queue." ✅ A value can sit in a buffer after `enqueue` returns, so a later `dequeue` wrongly gets `None`: **not linearizable**.
+> - ❌ "The tester proved my datatype correct." ✅ It only shows that the **histories it observed** were linearizable.
+> - ❌ Using a mutable spec, or comparing `Array`s with `==`. ✅ The spec must be immutable; convert arrays to `List`s (array `==` is reference equality).
+
 ---
 
 ## 11. Partial Datatypes and Concurrent BFS
+
+> [!NOTE]
+> **📖 Key definitions**
+> - **Partial queue:** `dequeue` **blocks** while the queue is empty.
+> - **Termination detection:** recognising that **no further progress is possible** (e.g. queue empty **and** every worker waiting to dequeue), then shutting down cleanly.
+> - **Coordinator:** a thread that receives the first solution and then shuts the system down.
+> - **Approximate BFS:** nodes are expanded *roughly* in breadth-first order, but a slow thread can let deeper nodes run first.
 
 ### 11.1 Partial queue: block when empty
 ```scala
@@ -1194,9 +1468,31 @@ result
 
 **Only approximately breadth-first:** a delayed thread may let deeper nodes be expanded before shallower ones, so the path may not be shortest. For true BFS, synchronise globally at the end of each ply. This is **bag of tasks with replacement**: each queued node = "expand me", which may add tasks.
 
+> [!TIP]
+> **✅ Key takeaways**
+> 1. Blocking operations introduce **deadlock risk**: if all threads wait to dequeue from an empty queue, nobody will ever enqueue.
+> 2. To detect "all waiting", the server must **count waiters**, so dequeuers send **reply channels** that the server stores (a guard alone would hide them).
+> 3. A concurrent search must terminate **both ways**: solution found (coordinator shuts the queue) **and** no solution (queue detects everyone waiting).
+> 4. Concurrent graph search = **bag of tasks with replacement**; `seen.add` must be a single atomic "add and tell me if it was new".
+
+> [!WARNING]
+> **⚠️ Common misconceptions & errors**
+> - ❌ "A partial queue can't deadlock." ✅ It deadlocks when empty and every thread is dequeuing.
+> - ❌ "The concurrent BFS returns a shortest path." ✅ It's only approximately breadth-first. For true BFS, synchronise at the end of each ply.
+> - ❌ "`if(!seen.contains(n)) { seen.add(n); queue.enqueue(n) }`" ✅ TOCTTOU: two workers can both enqueue `n`. Use `if(seen.add(n))`.
+> - ❌ "Once one worker finds a path, the others stop on their own." ✅ They must be **told**: shut down the queue (and close `pathFound`).
+
 ---
 
 ## 12. Synchronous Data Parallel Programming and Barriers
+
+> [!NOTE]
+> **📖 Key definitions**
+> - **Synchronous data parallel:** threads work in **rounds**, each on its own part of the data, with a global synchronisation between rounds.
+> - **Barrier:** `sync(me)` returns only when **all $`p`$ threads** have called it (for that round).
+> - **Combining barrier:** a barrier where each thread contributes $`x_i`$ and all receive $`f(x_0, \dots, x_{p-1})`$ for associative $`f`$. *E.g.* `AndBarrier` ⇒ "is everyone done?".
+> - **Recursive doubling:** in round $`r`$, combine with the partner at distance $`2^r`$, so $`n`$ values are combined in $`\lceil \log_2 n \rceil`$ rounds (prefix sums).
+> - **Strictly diagonally dominant:** $`|a_{ii}| > \sum_{j \neq i} |a_{ij}|`$ for every row. This guarantees Jacobi converges.
 
 ### 12.1 Rounds and barriers
 Threads proceed in **rounds**; at the end of each round there's a **barrier synchronisation**: no thread passes until all have arrived. So each thread sees the others' previous-round updates. Data is shared by messages (when each value goes to few threads) or via shared variables. Applications: image processing, PDEs (weather, fluids), matrices, cellular automata.
@@ -1320,11 +1616,41 @@ Because of the barrier, all workers agree on which array is "old" in each round,
 For cellular automata, PDEs, image smoothing: give each thread a horizontal **strip**. Each round it sends its top row up and its bottom row down.
 ⚠️ **Arrays are references:** `up!myA(start)` shares the row with the receiver, which is a race! Either send a **copy** (`up!(myA(start).clone)`) or replace the row afterwards (`myA(start) = new Array[Int](N)`).
 
+> [!TIP]
+> **✅ Key takeaways**
+> 1. The barrier separates **reading** the old state from **writing** the new state. Classic structure: **two arrays**, read `old`, write your slice of `new`, barrier, swap.
+> 2. Termination must be a **global** decision. Use a **combining barrier** so every thread gets the same answer and leaves the loop in the same round.
+> 3. Without a barrier, a fast thread's **next-round** message can overtake a slow thread's **current-round** one.
+> 4. Count cost as **rounds × cost per round**: prefix sums take $`\Theta(\log n)`$ rounds × $`\Theta(\log n)`$ per barrier $`= \Theta(\log^2 n)`$.
+> 5. Arrays are references: sending a row **shares** it, so send a **copy**.
+
+> [!WARNING]
+> **⚠️ Common misconceptions & errors**
+> - ❌ "Each thread can stop when **its own** part has converged." ✅ The others will wait at the barrier forever. All must agree (combining barrier).
+> - ❌ "Updating `x` in place is the same as Jacobi." ✅ Jacobi needs all updates computed from the **old** vector; in-place updates are a different algorithm and race with readers.
+> - ❌ "Prefix sums takes $`\Theta(\log n)`$ time." ✅ $`\Theta(\log n)`$ **rounds**, but each barrier costs $`\Theta(\log n)`$.
+> - ❌ "Message passing needs no barrier because each value goes to the right receiver." ✅ The channel to a receiver is shared by rounds, so messages from different rounds can mix.
+> - ❌ "Small problems benefit from parallel Jacobi too." ✅ For small $`n`$, barrier overhead makes the sequential version faster.
+
 ---
 
 # Part IV — Shared-Memory Primitives
 
 ## 13. Monitors (`synchronized`, `wait`, `notify`)
+
+> [!NOTE]
+> **📖 Key definitions**
+> - **Critical region:** code that accesses shared state and so must not run in two threads at once.
+> - **Mutual exclusion:** at most one thread is inside the critical region at any time.
+> - **Monitor:** an object bundling **private data + operations + mutual exclusion** (+ a way to wait for conditions).
+> - **`synchronized`:** run a block while holding the object's lock. Only one thread at a time across **all** `synchronized` blocks **on the same object**.
+> - **Re-entrant:** a thread already holding the lock can enter another block on the same lock.
+> - **`wait()`:** atomically **release the lock and suspend** until notified, then **re-acquire** the lock before continuing.
+> - **`notify()` / `notifyAll()`:** wake **one** / **all** threads waiting on this monitor.
+> - **Spurious wake-up:** returning from `wait()` with **no** notify (allowed on the JVM).
+> - **Signal-and-continue:** after `notify` the **notifier keeps the lock**; the woken thread competes for it later (Java/Scala). *Signal-and-wait:* the lock passes straight to the woken thread.
+> - **Busy waiting:** looping on a condition instead of blocking.
+> - **Starvation (readers/writers):** a writer waits forever because readers keep overlapping.
 
 ### 13.1 Mutual exclusion
 **Mutual exclusion:** at most one thread at a time executes a **critical region**. A **monitor** = data + operations + synchronisation guaranteeing mutual exclusion. A thread must hold the monitor's **lock** to run inside it.
@@ -1466,9 +1792,37 @@ class FairReadWriteLock extends ReadersWritersLock{
 ```
 (Avoids starvation provided the JVM monitor is fair.) **Testing:** log `Enter` *after* entering and `Leave` *before* leaving (subset of true period ⇒ no false positives); then scan the log checking the invariant.
 
+> [!TIP]
+> **✅ Key takeaways**
+> 1. Protect **every** access to shared state (reads too) with the **same** lock.
+> 2. The only correct way to wait: **`while(!cond) wait()`**, because of spurious wake-ups **and** because another thread may falsify `cond` before you get the lock.
+> 3. `notify` wakes an **arbitrary** waiter. With **different kinds** of waiters (producers vs consumers) it can wake the wrong kind and lose a signal, so use `notifyAll` (or targeted conditions, §15).
+> 4. Monitors give memory guarantees: unlock **publishes**, lock **subscribes**. Correctly synchronised code needs no further JMM thinking.
+> 5. Fairness is a design decision: the simple readers/writers lock **starves writers**; registering writer interest fixes it.
+
+> [!WARNING]
+> **⚠️ Common misconceptions & errors**
+> - ❌ "`wait()` keeps the lock." ✅ It **releases** it, and must re-acquire it before returning.
+> - ❌ "The notified thread runs immediately after `notify()`." ✅ The notifier continues (signal-and-continue); the woken thread must win the lock later, by which time `cond` may be false again.
+> - ❌ "`if(!cond) wait()` is enough." ✅ Use `while`.
+> - ❌ "`notify()` wakes a thread that can make progress." ✅ It may wake one of the wrong kind; that signal is then wasted.
+> - ❌ Calling `wait`/`notify` outside `synchronized` (or on a different object). ✅ Throws `IllegalMonitorStateException`.
+> - ❌ "Only writes need `synchronized`." ✅ Unsynchronised reads may see stale values (that's why `getX` is synchronized).
+> - ❌ "`synchronized` blocks on different objects exclude each other." ✅ Only blocks on the **same** object do.
+> - ❌ "`notifyAll` is a free fix." ✅ Every waiter wakes, grabs the lock, rechecks, and most go back to sleep.
+
 ---
 
 ## 14. Explicit Locks
+
+> [!NOTE]
+> **📖 Key definitions**
+> - **Lock:** an object with `acquire` (wait until free, then take) and `release`. `lock.mutex{ … }` = acquire; run; release in `finally`.
+> - **Contention:** threads waiting for the same lock. High contention ⇒ the lock is a **bottleneck**.
+> - **Coarse-grained locking:** one lock for the whole structure.
+> - **Fine-grained locking:** one lock per element.
+> - **Striped locking:** $`k`$ locks; lock $`j`$ guards every element $`i`$ with $`i \bmod k = j`$.
+> - **Sharding:** split the data into $`n`$ independent sub-structures (shards), each with its own lock; element $`x`$ lives in shard `hash(x) mod n`.
 
 ### 14.1 SCL `Lock`
 ```scala
@@ -1524,9 +1878,30 @@ class ShardedSet[A](n: Int){
 }
 ```
 
+> [!TIP]
+> **✅ Key takeaways**
+> 1. Explicit locks = `synchronized` with more control: holding periods can **overlap** (non-nested), and you can attach **conditions** (§15).
+> 2. Always release in **`finally`** (use `mutex`), otherwise an exception leaves the lock held forever.
+> 3. To scale, **reduce contention**: fine-grained, striped or sharded locking, so operations on different parts proceed in parallel.
+
+> [!WARNING]
+> **⚠️ Common misconceptions & errors**
+> - ❌ "`acquire; …; release` without `try/finally` is fine." ✅ An exception in between never releases the lock.
+> - ❌ "Fine-grained locking is always best." ✅ It costs memory, and operations touching **several** elements must take several locks (needs a fixed order to avoid deadlock).
+> - ❌ "`x.hashCode % n` is a valid shard index." ✅ It can be **negative**. Use `(x.hashCode & 0x7FFFFFFF) % n`.
+> - ❌ "A re-entrant lock is released by a single `release`." ✅ You must release as many times as you acquired.
+
 ---
 
 ## 15. Conditions and Targeted Signals
+
+> [!NOTE]
+> **📖 Key definitions**
+> - **Condition (variable):** a named wait-queue attached to a lock. `await()` releases the lock and waits for a `signal()` on **that** condition.
+> - **Targeted signal:** waking a thread of a **specific kind** (e.g. only a waiting consumer) by giving each kind its own condition.
+> - **`await(test)`:** `while(!test) await()`.
+> - **Barging:** after a signal, a *different* thread grabs the lock first and invalidates the condition before the woken thread runs.
+> - **Quiescent state:** a moment when no thread is running or runnable (all are blocked). Good for stating invariants about who is waiting where.
 
 ### 15.1 The problem with `notifyAll`
 In `Slot2`, a `put` should wake a **getter**, and a `get` should wake a **putter**. With one wait-set per monitor you can't target them, so you're stuck with `notifyAll` and lots of wasted wake-ups.
@@ -1660,9 +2035,33 @@ object Barber{
 - Use a **flag** whenever a signal might arrive before the other party waits.
 - **Debug:** lots of assertions; log signals sent/received.
 
+> [!TIP]
+> **✅ Key takeaways**
+> 1. **One condition per reason for waiting** (`notFull`, `notEmpty`, …) gives targeted wake-ups instead of `notifyAll`.
+> 2. A `signal()` with nobody waiting is **lost**. If the signal can happen before the wait, record it in a **boolean/counter state variable** and wait on `await(flag)`.
+> 3. Even without spurious wake-ups (SCL), **recheck** the condition: barging can falsify it.
+> 4. For synchronisation puzzles (sleeping barber): write down the **sequence of signals**, give each its own condition, add flags where a signal may come early, and state **invariants in quiescent states**.
+
+> [!WARNING]
+> **⚠️ Common misconceptions & errors**
+> - ❌ "A `signal` is remembered until someone waits." ✅ It's **lost** (unlike a semaphore `up`).
+> - ❌ "SCL has no spurious wake-ups, so I never need to recheck." ✅ Barging can still invalidate the condition (two consumers, one item).
+> - ❌ "Conditions are separate locks." ✅ All conditions of a lock share **that one lock**; you must hold it to `await`/`signal`.
+> - ❌ "`java.util.concurrent` conditions behave like SCL's." ✅ Java and C++ conditions **can** wake spuriously.
+
 ---
 
 ## 16. Semaphores
+
+> [!NOTE]
+> **📖 Key definitions**
+> - **Semaphore:** a synchronisation object with **state**. `down` (P/wait/acquire) waits until it's available and takes it; `up` (V/signal/release) makes it available.
+> - **Binary semaphore:** state is up or down.
+> - **Mutex semaphore:** binary, **initially up**; `down`…`up` brackets a critical region.
+> - **Signalling semaphore:** binary, **initially down**; `up` sends a signal, `down` waits for it. The signal is **remembered**.
+> - **Counting semaphore:** state = number of **permits** $`\ge 0`$; `down` waits for a permit and takes one; `up` adds one.
+> - **Lost signal:** an `up` on an already-up binary semaphore. The signal vanishes (SCL-style semaphores throw).
+> - **Passing the baton:** the thread leaving a critical region **chooses who goes next** and lifts *that* thread's semaphore **without releasing the mutex**; the woken thread inherits mutual exclusion.
 
 ### 16.1 Definition
 Like a railway signal: **`down`** (P / wait / acquire) waits until the flag is up, then lowers it and proceeds. **`up`** (V / signal / release) raises the flag so another thread can proceed.
@@ -1848,11 +2247,37 @@ class CountingSemaphorePartialQueue[T] extends PartialQueue[T]{
 ```
 ⚠️ **Order matters:** if `dequeue` took `mutex` first on an empty queue, it would block `enqueue` forever: deadlock.
 
+> [!TIP]
+> **✅ Key takeaways**
+> 1. A semaphore **remembers** an `up`, so a signal sent before anyone waits isn't lost. That's the key difference from conditions.
+> 2. Mutex (start up) vs signalling (start down): the **initial value** encodes the role.
+> 3. **Passing the baton** gives precise control over who runs next (FIFO, readers vs writers, …). Waiting threads must **release the mutex before** waiting.
+> 4. Prove no lost signals by showing $`\texttt{s.down}_n \prec \texttt{s.up}_{n+1}`$ for each semaphore (happens-before chains).
+> 5. **Order of `down`s matters**: wait on the condition semaphore (e.g. counting `size`) **before** taking the mutex; take multiple locks in a **global order**.
+
+> [!WARNING]
+> **⚠️ Common misconceptions & errors**
+> - ❌ "A semaphore is just a lock." ✅ It has **no owner**: any thread can `up` it, which is what makes signalling and baton passing possible.
+> - ❌ "An extra `up` is harmless." ✅ On a binary semaphore it's a **lost signal** (or an exception).
+> - ❌ "When passing the baton I should also release the mutex." ✅ No! The woken thread **inherits** it. Releasing as well breaks mutual exclusion.
+> - ❌ "It's fine to wait on a signalling semaphore while holding the mutex." ✅ Deadlock: the signaller can't get in.
+> - ❌ "`mutex.down; size.down` is the same as `size.down; mutex.down`." ✅ The first deadlocks on an empty queue.
+> - ❌ "`signal1.up; signal2.down` in **both** threads synchronises them repeatedly." ✅ It works once, but in a loop one thread can `up` twice. Reverse the order in one thread.
+> - ❌ "Two threads locking `sem1` then `sem2` and `sem2` then `sem1` is fine." ✅ Classic deadlock. Fix a global lock order.
+
 ---
 
 # Part V — Patterns, Practice and Reference
 
 ## 17. Patterns of Concurrent Programming
+
+> [!NOTE]
+> **📖 Key definitions**
+> - **Recursive parallelism:** replace independent recursive calls on **disjoint data** with parallel threads.
+> - **Competition parallel:** run **different algorithms** for the same problem in parallel and take the first answer.
+> - **Task parallel:** **different** threads perform **different operations**, typically as a **pipeline** (not the same "task" as in bag-of-tasks!).
+> - **Future:** a value computed in parallel; reading it **blocks until it's ready**.
+> - **Lock-free programming:** no locks; correctness relies on atomic hardware instructions such as **compare-and-set (CAS)**: "if the value is `expected`, set it to `new` and return true; else return false", atomically.
 
 Patterns seen so far: concurrent datatypes; bag of tasks (± replacement); synchronous computation; interacting peers (central, fully connected, ring, tree); clients and servers. More:
 
@@ -1905,6 +2330,19 @@ def compareAndSet(expected: Int, newValue: Int): Boolean = atomically{
 }
 ```
 Plain reads/writes aren't enough: e.g. a **wait-free queue is impossible** with standard registers. → *Concurrent Algorithms and Data Structures*.
+
+> [!TIP]
+> **✅ Key takeaways**
+> 1. Recursive parallelism is natural for divide-and-conquer but must be **limited** (go sequential below a threshold) to avoid thread explosion.
+> 2. Bag-of-tasks with replacement is the scalable alternative: a **fixed** number of workers.
+> 3. Competition parallelism shines when algorithms have **different bad cases** (SAT).
+> 4. Every lock and every server is a potential **bottleneck**; lock-free techniques (CAS) are the next step (→ *Concurrent Algorithms and Data Structures*).
+
+> [!WARNING]
+> **⚠️ Common misconceptions & errors**
+> - ❌ "Spawn a thread for every recursive call." ✅ Thousands of threads cost more than they gain. Use a threshold.
+> - ❌ "Futures remove the need to think about races." ✅ The computation must still not race with the main thread on shared data.
+> - ❌ "Lock-free means no synchronisation." ✅ It relies on atomic CAS; ordinary reads/writes alone can't even implement a wait-free queue.
 
 ---
 
@@ -2372,3 +2810,32 @@ Why there are no races: `him` is written before `manArrived.up` and read after t
 - [ ] Logging for tests: log "start holding" **after** acquiring and "stop holding" **before** releasing.
 - [ ] Too many tiny tasks/threads ⇒ communication dominates. Limit recursive parallelism.
 - [ ] Floating-point results vary with summation order, so test with a tolerance.
+
+### 19.4 Concepts you must not confuse
+
+| Pair | Difference |
+|---|---|
+| Thread vs process | Threads share an address space (cheap); processes have separate, protected ones (expensive OS communication). |
+| Race condition vs memory race | A race condition is any order-dependent bug (can be high-level, e.g. TOCTTOU between two atomic calls); a memory race is unsynchronised conflicting access to one location. |
+| Safety vs liveness | "Nothing bad happens" (finite counterexample) vs "something good eventually happens" (infinite counterexample). |
+| Deadlock vs starvation vs livelock | Everyone in a cycle is blocked / some thread waits forever while others progress / threads keep acting but make no progress. |
+| `SyncChan` vs `BuffChan` | Rendezvous (send waits for receive) vs send returns once buffered (blocks only when full). |
+| `endOfStream` vs `close` | Sender's "no more data" (buffered channel drains first) vs close completely. |
+| `run` vs `fork` | Run and wait for termination vs start in the background and return immediately. |
+| `repeat{alt}` vs `serve` | New alt each time, so first-ready-in-order (can starve) vs one reused alt, round-robin (fair). |
+| Feasible vs ready branch | Guard true & port open vs feasible & partner ready now. |
+| Messages vs rounds | Total communication vs longest happens-before chain (time). |
+| Data parallel vs task parallel | Same code on different data vs different code (pipeline stages) on the same data. |
+| Farm vs bag of tasks | One equal share per worker vs many small tasks pulled on demand (load balancing). |
+| Total vs partial operation | Returns a special value when the precondition fails vs blocks until it holds. |
+| Linearizable vs "thread-safe" | Each op appears atomic at a point in its interval, consistent with the spec vs (vague) "doesn't crash". Composing thread-safe ops isn't atomic. |
+| Barrier vs combining barrier | Just wait for all vs wait for all **and** combine their values. |
+| `synchronized` vs `Lock` | Implicit per-object lock, must be properly nested vs explicit object; overlapping holds; multiple conditions. |
+| `notify` vs `notifyAll` | Wake one arbitrary waiter (may be the wrong kind) vs wake all (correct but costly). |
+| `wait()` vs condition `await()` | One wait-set per object, spurious wake-ups vs many named conditions per lock (no spurious wake-ups in SCL). |
+| Signal-and-continue vs signal-and-wait | Signaller keeps the lock (Java/Scala) vs lock passes to the woken thread. |
+| Condition `signal` vs semaphore `up` | Lost if nobody waits vs remembered in the semaphore state. |
+| Mutex vs signalling semaphore | Starts **up** (protects a region) vs starts **down** (carries a signal). |
+| Binary vs counting semaphore | Up/down vs number of permits. |
+| Fine-grained vs striped vs sharding | One lock per element vs $`k`$ locks, element $`i`$ uses lock $`i \bmod k`$ vs independent sub-structures chosen by hash. |
+| False positive vs false negative | Test reports a bug that isn't there vs test misses a real bug (logging intervals trade one for the other). |
