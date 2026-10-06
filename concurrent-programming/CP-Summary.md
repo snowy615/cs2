@@ -57,7 +57,7 @@ A **concurrent program** is several sequential threads running at once. Each thr
 
 If two threads touch the same variable and at least one of them writes, different interleavings give different results. That's a **race condition**. The course is a toolkit for **disciplined interaction**: ways to coordinate threads so that *every* possible interleaving is correct.
 
-> **The golden rule (from Ch. 3/4):** if two threads both access a variable (other than both just reading), there must be a **synchronisation** between them: after the first finishes with the variable and before the second starts using it.
+> **The golden rule (lecture 3, §4.5):** if two threads both access a variable (other than both just reading), there must be a **synchronisation** between them: after the first finishes with the variable and before the second starts using it.
 
 Every tool in the course is a way to provide that synchronisation:
 
@@ -78,9 +78,9 @@ We also need ways to **reason** and **test**:
 ```mermaid
 flowchart TD
     P["THE PROBLEM: atomic actions interleave, so shared variables give race conditions"]
-    P --> MP["MESSAGE PASSING: Ch 2-8. Channels, closing, alt / serve"]
-    P --> SM["SHARED MEMORY + LOCKING: Ch 12-15. Monitors, Locks + Conditions, Semaphores"]
-    MP --> CD["CONCURRENT DATATYPES: Ch 9-10. Server-based queues, linearizability, testing"]
+    P --> MP["MESSAGE PASSING: §3-9. Channels, closing, alt / serve"]
+    P --> SM["SHARED MEMORY + LOCKING: §13-16. Monitors, Locks + Conditions, Semaphores"]
+    MP --> CD["CONCURRENT DATATYPES: §10-11. Server-based queues, linearizability, testing"]
     SM --> CD
     MP --> PAT["PATTERNS: farm, bag of tasks, client-server, interacting peers, barriers, recursive / task / competition parallel, futures"]
     CD --> PAT
@@ -88,24 +88,24 @@ flowchart TD
     PAT --> PERF["PERFORMANCE: communication is expensive, choose task size / number of workers / buffering"]
 ```
 
-| Ch. | Topic | Big idea in one line |
-|---|---|---|
-| 1 | Introduction | Interleaving + shared variables ⇒ races; we must avoid memory races. |
-| 2 | Message passing | Threads share nothing and talk only via channels (CSP style). |
-| 3 | Using channels | Recursive networks (quicksort); *happens-before*; channels also synchronise memory. |
-| 4 | Numerical integration | **Farm**: controller splits the work equally across workers. Communication costs! |
-| 5 | Bag of tasks | More, smaller tasks than workers ⇒ automatic **load balancing**; encapsulate concurrency in objects. |
-| 6 | Alternation | `alt`/`serve` lets a thread wait on *several* channels; guards; fairness; dining philosophers/deadlock. |
-| 7 | Clients & servers | A server thread owns the state; clients send requests and get replies. |
-| 8 | Interacting peers | Centralised / symmetric / ring / tree topologies; count messages vs. rounds. |
-| 9 | Concurrent datatypes | Total vs. partial ops; correctness = **linearizability**; how to test it. |
-| 10 | Partial datatypes & BFS | Blocking ops; detecting termination; concurrent graph search. |
-| 11 | Synchronous data parallel | Rounds separated by **barriers**; prefix sums in $`\Theta(\log n)`$ rounds; Jacobi iteration. |
-| 12 | Monitors | `synchronized` for mutual exclusion; `wait`/`notify` instead of busy waiting. |
-| 13 | Locks | Explicit `Lock`; fine-grained, striped locking, sharding. |
-| 14 | Conditions | Several conditions per lock ⇒ **targeted** signals. |
-| 15 | Semaphores | Stateful signals; mutex vs. signalling semaphores; **passing the baton**; counting semaphores. |
-| 16 | Patterns | Recursive parallelism, competition, task parallel, futures, lock-free (CAS). |
+| Lecture | § here | Topic | Big idea in one line |
+|---|---|---|---|
+| 1 | §1–2 | Introduction | Interleaving + shared variables ⇒ races; we must avoid memory races. |
+| 2 | §3 | Message passing | Threads share nothing and talk only via channels (CSP style). |
+| 3 | §4 | Using channels | Recursive networks (quicksort); *happens-before*; channels also synchronise memory. |
+| 4 | §5 | Numerical integration | **Farm**: controller splits the work equally across workers. Communication costs! |
+| 5 | §6 | Bag of tasks | More, smaller tasks than workers ⇒ automatic **load balancing**; encapsulate concurrency in objects. |
+| 6 | §7 | Alternation | `alt`/`serve` lets a thread wait on *several* channels; guards; fairness; dining philosophers/deadlock. |
+| 7 | §8 | Clients & servers | A server thread owns the state; clients send requests and get replies. |
+| 8 | §9 | Interacting peers | Centralised / symmetric / ring / tree topologies; count messages vs. rounds. |
+| 9 | §10 | Concurrent datatypes | Total vs. partial ops; correctness = **linearizability**; how to test it. |
+| 10 | §11 | Partial datatypes & BFS | Blocking ops; detecting termination; concurrent graph search. |
+| 11 | §12 | Synchronous data parallel | Rounds separated by **barriers**; prefix sums in $`\Theta(\log n)`$ rounds; Jacobi iteration. |
+| 12 | §13 | Monitors | `synchronized` for mutual exclusion; `wait`/`notify` instead of busy waiting. |
+| 13 | §14 | Locks | Explicit `Lock`; fine-grained, striped locking, sharding. |
+| 14 | §15 | Conditions | Several conditions per lock ⇒ **targeted** signals. |
+| 15 | §16 | Semaphores | Stateful signals; mutex vs. signalling semaphores; **passing the baton**; counting semaphores. |
+| 16 | §17 | Patterns | Recursive parallelism, competition, task parallel, futures, lock-free (CAS). |
 
 ## 0.3 How it all ties together: one problem, many implementations
 
@@ -191,17 +191,18 @@ The best way to see how the tools relate is that the course implements the **sam
 - In this course we use **threads in one address space**. Programs that use *only* message passing could have their threads replaced by separate processes.
 
 ### 1.2 Why concurrency?
-1. **Speed** — use many processors. Problems in the class **NC** ("Nick's Class") can be solved in polylogarithmic time on a parallel machine with polynomially many processors (e.g. matrix multiplication, determinant, maximal matching, polynomial GCD).
+1. **Speed** — use many processors. Problems in the class **NC** ("Nick's Class") can be solved in polylogarithmic time on a parallel machine with polynomially many processors (e.g. matrix multiplication, determinant, maximal matching, polynomial GCD, depth-first search of an undirected graph).
+   - Examples: scientific computation (climate modelling, galaxy evolution, effects of new drugs), graphics and image processing, combinatorial/optimisation problems (scheduling, game playing).
    - **Data parallel:** every thread does the same thing to its own part of the data.
    - **Task parallel:** different threads do different things.
    - ⚠️ Concurrency may *not* speed things up: communication and coordination costs can outweigh the gain.
 2. **Multi-task systems** — one thread per independent task is far simpler than one monolithic loop (e.g. 1000 light controllers ⇒ 1000 threads; operating systems, GUIs, real-time controllers, games, simulations).
-3. **Distributed computing** — the web, file servers, databases: necessarily concurrent, often client–server.
+3. **Distributed computing** — the web, file servers, databases: necessarily concurrent, often client–server. The components may themselves be multi-threaded; **fault-tolerant** systems may use redundant components.
 
 ### 1.3 Architectures (background)
 - **Uni-processor, multi-threaded:** the OS schedules threads; a thread runs until it blocks (e.g. I/O) or its time slice ends.
 - **Thread states:** `Runnable --schedule--> Running --deschedule--> Runnable`; `Running --block--> Blocked --unblock--> Runnable`; `Running --done--> Finished`.
-- **Shared-memory multiprocessors:** CPUs share memory over an interconnect; each CPU has its own **cache**, so caches may be **inconsistent**. The language's **memory model** says what consistency is guaranteed.
+- **Shared-memory multiprocessors:** CPUs share memory over an interconnect; each CPU has its own **cache**. Reads are served from the cache, and a write initially happens **only in the cache**, copied back to main memory later, so different CPUs' caches may be **inconsistent**. The language's **memory model** says what consistency is guaranteed.
 - **Multi-core:** several cores on a chip, private L1, shared L2/L3. Little speed-up unless the software is written to exploit it.
 - **GPUs (GPGPU):** many cores, great at parallel floating point.
 - **Distributed memory:** each CPU has private memory; communication by **message passing**.
@@ -364,6 +365,8 @@ def nats(out: !![Int]) = thread{ var n = 0; while(true){ out!n; n += 1 } }
 /** Copy alternate values from in to out. */
 def alts[A](in: ??[A], out: !![A]) = thread{ while(true){ out!(in?()); in?() } }
 ```
+Note that `copy` can **receive** on `in` even if nobody is ready to receive on `out`; it then holds that value, acting like a one-place buffer.
+
 Typing parameters as `??`/`!!` documents what the thread does with each channel and gives type safety.
 
 **Example: multiples of four.**
@@ -386,14 +389,14 @@ def tee[A](in: ??[A], out1: !![A], out2: !![A]) = thread{
   while(true){ val v = in?(); run(thread{out1!v} || thread{out2!v}) }
 }
 ```
-(Creating two threads per value is moderately expensive. §7.4 gives a cheaper version using `alt`.)
+Creating and running two new threads per value is moderately expensive. **Trade-off:** in a *specific* setting where you know the environment's order, a fixed-order `tee` is cheaper and simpler; a *generic* component should allow either order. (§7.4 gives a cheaper either-order version using `alt`.)
 
 ### 3.5 Closing channels
 To signal the end of a finite stream, **close the channel**:
 - `in.close` closes an `InPort` (a receiver can say "I'll accept no more").
 - `out.endOfStream` closes an `OutPort` for sending. On a **sync** channel this fully closes it; on a **buffered** channel receivers can keep receiving until the buffer is empty, then it's fully closed.
 - Sending/receiving on a closed channel throws `Closed`, a subclass of **`Stopped`**.
-- Closing an already-closed channel has no effect. `c.isClosed` tests it; `c.reopen` reopens it (pre: it is closed and nobody is using it).
+- Closing an already-closed channel has no effect. There's no need to close a channel that is about to go out of scope (it will just be garbage collected). `c.isClosed` tests it; `c.reopen` reopens it (pre: it is closed and nobody is using it).
 
 **Propagate closure downstream:** catch the exception and close your other channels.
 ```scala
@@ -518,6 +521,8 @@ def q = thread{ c?(); /* guaranteed to see x == 42 */ }
 ```
 
 ### 4.5 Rule for disciplined interaction
+**Starting discipline (lecture 1):** parallel threads use **disjoint sets of variables**, sharing only for reading. That avoids all memory races. The rule below *weakens* this. (The 4th-year *Concurrent Algorithms and Data Structures* course takes a different view and allows racy concurrent accesses.)
+
 Threads *may* share variables, as long as: **if two threads access a variable (not both only reading), there is a (direct or indirect) synchronisation after the first finishes and before the second starts.** State clearly which threads may read/write each variable in each state.
 
 ### 4.6 Fixing the race with a buffered channel as a token
@@ -530,7 +535,11 @@ def main(args: Array[String]) = { run(p || q || thread{ c!() }); println(x) }  /
 ```
 Only the thread holding the token touches `x`, so it always prints 0, while still allowing every interleaving of *whole* updates.
 
-**Q: would a `SyncChan` work?** Mutual exclusion still holds (a `c!()` hands the token directly to a waiting `c?()`), but at the very end the last thread's final `c!()` has **no receiver**, so it blocks forever and `run` never returns. The buffer lets the final token sit in the channel.
+**Q: would a `SyncChan` work?** Mutual exclusion still holds, but:
+1. A thread can't receive its **own** `c!()` (it's blocked sending), so every handover must go to the **other** thread. That forces **strict alternation** p, q, p, q, …, which destroys the goal of preserving as many interleavings as possible.
+2. At the very end the last thread's final `c!()` has **no receiver**, so it blocks forever and `run` never returns.
+
+`BuffChan(1)` fixes both: the token sits in the buffer and **either** thread (including the one that just released it) can take it next.
 
 ### 4.7 Objects and message passing: beware references
 Sending an object sends a **reference**. Both threads now share it, so a race is possible.
@@ -559,7 +568,7 @@ def q(mid: ??[Person]) = thread{ while(true){ val pers = mid?(); println(pers.na
 > - ❌ "On a buffered channel the receive also happens before the send." ✅ Only send $`\preceq`$ receive.
 > - ❌ "Two threads can share a variable as long as they don't touch it at exactly the same instant." ✅ They need a **synchronisation** between the accesses, otherwise caches/reordering break it.
 > - ❌ "`mid!pers` copies the object." ✅ It sends a reference; mutating `pers` afterwards races with the receiver. Send a fresh or copied object.
-> - ❌ "A `SyncChan` works as a mutual-exclusion token just like `BuffChan(1)`." ✅ The last thread's final `c!()` has no receiver and **blocks forever**.
+> - ❌ "A `SyncChan` works as a mutual-exclusion token just like `BuffChan(1)`." ✅ With a `SyncChan` the token must go to the *other* thread (forced strict alternation), and the last thread's final `c!()` has no receiver and **blocks forever**.
 
 ---
 
@@ -587,6 +596,23 @@ def integral(left: Double, right: Double, n: Int, delta: Double): Double = {
   var sum: Double = (f(right)+f(left))/2.0
   for(i <- 1 until n) sum += f(left+i*delta)
   sum*delta
+}
+```
+
+**Class structure used by every implementation** (so they can be tested against each other):
+```scala
+abstract class TrapeziumT(f: Double => Double, a: Double, b: Double){
+  def apply(): Double                                         // calculate the integral
+  protected def integral(left: Double, right: Double, n: Int, delta: Double): Double = ...  // as above
+}
+class SeqTrapezium(f: Double => Double, a: Double, b: Double, n: Int) extends TrapeziumT(f, a, b){
+  require(n > 0)
+  def apply() = integral(a, b, n, (b-a)/n)
+}
+class Trapezium(f: Double => Double, a: Double, b: Double, n: Long, nWorkers: Int, buffering: Int = 0)
+    extends TrapeziumT(f, a, b){
+  require(n >= nWorkers && n%nWorkers == 0)   // simplifying assumption (the website code avoids it)
+  ...                                         // channels, worker, controller, system below
 }
 ```
 
@@ -635,6 +661,10 @@ with random polynomials, random $`a,b,n`$, nWorkers, repeated millions of times.
 
 > **A rough mental model (not from the slides):** with total work $`W`$, $`p`$ workers and per-message cost $`c`$, $`T(p) \approx W/p + c\,p`$, minimised around $`p^{*} \approx \sqrt{W/c}`$. Bigger problems justify more workers.
 
+**Experiment set-up (worker count):** 32-core server (2× Xeon E5-2683 with hyperthreading ⇒ 64 machine threads); integrand $`\int_{-100000}^{100000} x^2\cos x\,dx`$; $`n`$ from $`2^{16}`$ to $`2^{28}`$, each observation repeating the integral $`2^{28}/n`$ times (equal total work); buffered channels of capacity 16; mean and 95% confidence interval per point. "Small $`n`$" means up to about $`2^{20}`$ (the < 25% figure is $`n=2^{18}`$, 64 workers). For large $`n`$ the optimum is above 64 workers, but the curves are quite flat there. The answers **depend on the architecture**, and $`n`$ is treated as an input.
+
+**Experiment set-up (buffering):** 64 workers, buffer sizes 0 (synchronous), 1, 2, 4, …, 32. Buffering helps only when there are more workers than optimal. It might matter more when the time to **produce and/or process a task is more variable**.
+
 **Experimental design:** timings are random; control noise and do statistics (means, 95% confidence intervals).
 
 **Lesson:** *communication is expensive; the channel can be a bottleneck.*
@@ -672,7 +702,7 @@ Equal shares only work if every worker has its own equally fast, equally loaded 
 ```text
            distributor ──task──▶ worker 1 … worker n ──result──▶ collector
 ```
-Split the controller into a **distributor** and a **collector** (independent jobs, and one controller could be a bottleneck). The distributor **closes** `toWorkers` when tasks run out, which makes workers' `repeat` terminate.
+Split the controller into a **distributor** and a **collector**. A single controller thread would be tricky because it must handle communications on **two channels** (it would need `alt`, §7). The two jobs are independent anyway, and one controller could be a bottleneck. The distributor **closes** `toWorkers` when tasks run out, which makes workers' `repeat` terminate.
 
 ```scala
 private def worker = thread("worker"){
@@ -682,6 +712,7 @@ private def worker = thread("worker"){
   }
 }
 private def distributor = thread("distributor"){
+  require(n%nTasks == 0)          // simplifying assumption
   val delta = (b-a)/n; val taskSize = n/nTasks; val taskRange = (b-a)/nTasks
   var left = a
   for(i <- 0 until nTasks){ val right = left+taskRange; toWorkers!(left, right, taskSize, delta); left = right }
@@ -696,7 +727,9 @@ private def system = (|| (for(i <- 0 until nWorkers) yield worker)) || distribut
 
 ### 6.3 Tuning results
 - More tasks per worker ⇒ better load balancing… until a threshold where communication dominates (≈ when a task takes ~2 ms). With too many tiny tasks, workers spent < 1% of their time computing!
-- Best was around 50 workers on a 64-hardware-thread machine, and the result was **30–35% faster** than the farm.
+- Tasks-per-worker experiment: 64 workers, integral repeated $`2^{28}/n`$ times. The < 1% figure is $`n=2^{18}`$, 64 workers, 4096 tasks (64 per worker).
+- Workers experiment: $`n = 2^{22},\dots,2^{28}`$ with $`2^{8},\dots,2^{14}`$ tasks (the minima of the previous graph), repeated $`2^{29}/n`$ times. Minima lie between 32 and 64 workers, mostly around **50**, below the 64 machine threads: *the amount of computation isn't enough to justify using all the machine threads*.
+- The result was **30–35% faster** than the farm: the bag-of-tasks technique works.
 
 ### 6.4 Encapsulation
 Concurrency decisions were tangled with the computation. Better: put each design decision inside **one concurrent object** whose methods may be called concurrently. Then reasoning is **local** to one object, and swapping the implementation (e.g. to monitors, see Sheet 3 Q6) changes one place.
@@ -811,6 +844,7 @@ def tagger[T](l: ??[T], r: ??[T], out: !![(Int, T)]) = thread{
   l.close; r.close; out.endOfStream
 }
 ```
+The `serve` terminates when **both** `l` and `r` are closed, **or** `out` is closed (the body's `out!` throws `Stopped`).
 
 ### 7.4 Output branches and continuations
 ```scala
@@ -839,12 +873,28 @@ def buff2Alt[T](in: ??[T], out: !![T]) = {
        | !empty && in  =?=> { v => out!x; x = v } )        // full: emit old, keep new
 }
 ```
-(A recursive version: `buff2` receives `x` then calls `buff2full(in,out,x)`, which `alt`s between outputting `x` and inputting `y`.)
+The last two branches can be merged with an `if`:
+```scala
+     | in =?=> { v => if(empty){ x = v; empty = false } else { out!x; x = v } }
+```
+**Recursive version** (the state is encoded in which function is running):
+```scala
+def buff2[T](in: ??[T], out: !![T]): Unit = { val x = in?(); buff2full(in, out, x) }   // empty
+def buff2full[T](in: ??[T], out: !![T], x: T): Unit =                                  // holding x
+  alt( out =!=> { x } ==> { buff2(in, out) }
+     | in  =?=> { y => out!x; buff2full(in, out, y) } )
+```
 
 ### 7.5 Restrictions and caveats
 - A port may **not** be feasible in two `alt`s/`serve`s simultaneously (but may be used by an `alt` and a plain `!`/`?`).
 - **Both ends** of one channel may not be simultaneously feasible in `alt`s. (SCL detects violations.)
-- Generalised alts: `serve( | (for(i <- 0 until ins.length) yield ins(i) =?=> { x => out!(i, x) }) )`.
+- **Generalised alts** are built from a collection of branches with a prefix `|`:
+```scala
+def tagger[T](ins: List[??[T]], out: !![(Int, T)]) = thread{
+  serve( | (for(i <- 0 until ins.length) yield ins(i) =?=> { x => out!(i, x) }) )
+  for(in <- ins) in.close; out.endOfStream
+}   // terminates when all input channels are closed, or out is closed
+```
 - `alt`s are **heavyweight**. If you can force communications into a fixed order, do that instead.
 
 ### 7.6 Dining Philosophers and deadlock
@@ -867,6 +917,21 @@ def fork(me: Int, left: ??[Command], right: ??[Command]) = thread("Fork"+me){
 }
 ```
 
+**Simulation set-up and wiring:**
+```scala
+val N = 5
+def eat = Thread.sleep(500); def think = Thread.sleep(scala.util.Random.nextInt(900)); def pause = Thread.sleep(500)
+def system = {
+  val philToLeftFork, philToRightFork = Array.fill(N)(new SyncChan[Command])
+  // philToLeftFork(i): Phil(i) -> Fork(i);   philToRightFork(i): Phil(i) -> Fork((i-1) mod N)
+  val allPhils = || (for(i <- 0 until N) yield phil(i, philToLeftFork(i), philToRightFork(i)))
+  val allForks = || (for(i <- 0 until N) yield fork(i, philToRightFork((i+1)%N), philToLeftFork(i)))
+  allPhils || allForks
+}
+def main(args: Array[String]) = { log.writeToFileOnShutdown("philsLog.txt"); run(system) }
+```
+(Fork $`i`$'s `left` port comes from Phil $`i+1`$, for whom it is the right fork; its `right` port comes from Phil $`i`$, for whom it is the left fork. A typical deadlocking trace: everyone sits, then each picks up their left fork.)
+
 **Deadlock:** if all five pick up their left fork at once, every philosopher waits for a right fork that is held by a neighbour. It's a **cycle of waiting**, so nobody progresses. It may happen instantly or only after a long time, which is why it's dangerous. (Ctrl-\ gives a thread dump; named threads help.)
 
 **Practical 2: three ways to break the cycle:**
@@ -885,7 +950,7 @@ log.get                               // Array of events, merged by timestamp
 log.toFile("/tmp/logFile")
 log.writeToFileOnShutdown("philsLog.txt")   // useful if the program deadlocks and you Ctrl-C
 ```
-Each thread logs into a **thread-local** log with timestamps (no races, fast); `get` merges by timestamp. This assumes clocks are loosely synchronised across cores (OK on Linux; on Windows use `SharedLog`).
+Each thread logs into a **thread-local** log with timestamps (no races, fast); `get` merges by timestamp. This assumes clocks are loosely synchronised across cores (OK on Linux; on Windows use `SharedLog`). Timestamps are the **time elapsed since the `Log` was created** (avoids wrap-around), and the clock must be fine-grained enough that if one `add` logically happens before another, it gets a **strictly smaller** timestamp. `SharedLog` has the same interface but worse performance, which *might affect the likelihood of detecting bugs*.
 
 > [!TIP]
 > **✅ Key takeaways**
@@ -1019,6 +1084,31 @@ def checkLog(events: Array[LogEvent]): Boolean = {
   !error
 }
 ```
+```scala
+def client(me: ClientId, resourceServer: RAServer, log: Log[LogEvent]) = thread{
+  val got = new scala.collection.mutable.Queue[Resource]()          // resources held
+  for(_ <- 0 until iters){
+    if(scala.util.Random.nextInt(2) == 0)                            // acquire a new resource
+      resourceServer.requestResource(me) match{
+        case Some(r) => log.add(me, GotResource(me, r)); got.enqueue(r)   // log AFTER acquiring
+        case None => {}                                                   // try again later
+      }
+    else if(got.nonEmpty){                                           // return a resource
+      val r = got.dequeue()
+      log.add(me, ReturnedResource(me, r))                           // log BEFORE returning
+      resourceServer.returnResource(me, r)
+    }
+  }
+}
+def runTest = {
+  val log = new Log[LogEvent](p)
+  val resourceServer = new RAServer1(p, numResources)
+  run(|| (for(i <- 0 until p) yield client(i, resourceServer, log)))
+  resourceServer.shutdown                  // allow the server to terminate
+  if(!checkLog(log.get)) sys.exit()        // checkLog prints the offending prefix of the log
+}
+// main calls runTest many times
+```
 **Log acquires *after* acquiring and returns *before* returning.** Then the logged holding period is a **subset** of the real one. This avoids **false positives** (reporting a bug that isn't there, e.g. client A returns `r`, B gets `r` and logs it before A has logged its return). It risks **false negatives**, but enough testing still finds real bugs.
 
 ### 8.4 Variations
@@ -1100,6 +1190,10 @@ class Symmetric(n: Int) extends Sum{
 ```
 **Invariant (node $`i`$):** $`\text{sum} = x_i + \sum\{x_j \mid x_j \text{ received by } i\}`$.
 **Contention:** if every sender goes `0,1,2,…`, everyone queues for node 0 and node $`n-1`$ waits; the chain has length $`2n-3`$. Starting at `me+1` (staggered) gives a longest chain of $`n-1`$.
+The **original** (unstaggered) sender was `def sender = thread{ for(i <- 0 until n) if(i != me) toNode(i)!x }`.
+
+**Worked example, $`n = 4`$** (compress the time-line, take the best interleaving): unstaggered with `SyncChan` gives 6 in one interleaving and **5** at best ($`= 2n-3`$); with `toNode = Array.fill(n)(new BuffChan[Int](n-1 max 1))` it is **still 5**; staggered `(me+i)%n` gives **3** ($`= n-1`$). **Buffering does not remove contention; changing the send order does.**
+
 **Cost:** $`n(n-1)`$ messages in $`n-1`$ rounds.
 
 **Computing the best time (method):**
@@ -1162,6 +1256,8 @@ class Tree(n: Int) extends Sum{
   }
 }
 ```
+The parent of node $`i > 0`$ is $`\lfloor (i-1)/2 \rfloor`$; `up(i)` and `down(i)` connect node $`i`$ with its parent.
+
 **Correctness claim** (by induction on subtree size): node $`i > 0`$ sends its parent $`\sum\{x_j \mid j \in \mathrm{desc}(i)\}`$ where
 ```math
 \mathrm{desc}(i) = \{i\} \,\cup\, \big(\text{if } 2i+1<n \text{ then } \mathrm{desc}(2i+1) \text{ else } \emptyset\big) \,\cup\, \big(\text{if } 2i+2<n \text{ then } \mathrm{desc}(2i+2) \text{ else } \emptyset\big)
@@ -1218,7 +1314,7 @@ A **concurrent datatype** (queue, stack, set, map, …) can be safely used by ma
 
 ### 10.2 Preconditions: total vs. partial
 The sequential idiom `if(!q.isEmpty) q.dequeue()` **breaks** concurrently: another thread can dequeue between the test and the call (a *time-of-check to time-of-use* race). Two fixes:
-- **Total** operation: always returns, using a special value for "precondition false": `Option` (`None`), sometimes `null`, or an exception.
+- **Total** operation: always returns, using a special value for "precondition false": an `Option` (`None`); or `null`, which is appropriate (and more efficient) **only if `null` can never be returned when the precondition holds**; or **throw an exception** that the calling thread is expected to catch.
 - **Partial** operation: **blocks** until the precondition becomes true.
 
 ```scala
@@ -1415,6 +1511,8 @@ class TerminatingPartialQueue[A](numWorkers: Int){
 }
 ```
 
+**Design alternatives:** `dequeue` could return an `Option[A]` (`None` = shut down) instead of throwing `Stopped`; the reply channel may be a `SyncChan[A]` **or a `BuffChan[A]`** (then the server never blocks when replying).
+
 ### 11.3 Graph search
 ```scala
 trait Graph[N]{ def succs(n: N): List[N] }
@@ -1422,7 +1520,7 @@ abstract class GraphSearch[N](g: Graph[N]){
   def apply(start: N, isTarget: N => Boolean): Option[List[N]]
 }
 ```
-(Example: Lewis Carroll's word ladders, *grass → … → green*, nodes = words, edges = differ in one letter.)
+(Example: Lewis Carroll's word ladders: nodes = words, edges = differ in one letter. Carroll's *grass, crass, cress, tress, trees, frees, freed, greed, green* isn't even the shortest.) Graph search is used in route planning, planning, puzzle solving and verification; searches may minimise a cost or look for a node with a property, by BFS or DFS. **Practical 3** asks for approximate concurrent **depth-first** search (same structure, with a stack in place of the queue).
 
 **Sequential BFS:** a queue of `(node, pathToIt)` plus a `seen` set.
 ```scala
@@ -1439,12 +1537,23 @@ None
 ```
 
 ### 11.4 Concurrent BFS
-Workers run the same loop on a shared `TerminatingPartialQueue` and a shared **`ConcSet`** (§13.3). `g.succs` must be thread-safe (usually it only reads).
+Workers run the same loop on a shared `TerminatingPartialQueue` and a shared **`ConcSet`** (§13.2). `g.succs` must be thread-safe (usually it only reads).
 
 **Termination is the subtle part:**
-- **Path found:** return exactly one path and stop everyone. A **coordinator** receives the first path, then shuts down the queue (so all workers' `dequeue` throws `Stopped`) and closes `pathFound` (so other finders stop).
+- **Path found:** return exactly one path and stop everyone. A **coordinator** receives the first path, then shuts down the queue (so all workers' `dequeue` throws `Stopped`) and closes `pathFound` (so other finders stop). It might also be necessary to shut down the `seen` set (e.g. if it's server-based).
 - **No path:** eventually the queue is empty with all workers waiting, so it closes itself; a worker closes `pathFound`, which stops the coordinator.
 
+```scala
+class ConcGraphSearch[N](g: Graph[N]) extends GraphSearch[N](g){
+  val numWorkers = 8
+  def apply(start: N, isTarget: N => Boolean): Option[List[N]] = {
+    val queue = new TerminatingPartialQueue[(N, List[N])](numWorkers)
+    queue.enqueue((start, List(start)))          // seed BEFORE the workers start
+    val seen = new ConcSet[N]; seen.add(start)
+    ... // pathFound, worker, coordinator and run(...) as below
+  }
+}
+```
 ```scala
 val pathFound = new SyncChan[List[N]]
 def worker = thread("worker"){
@@ -1495,7 +1604,7 @@ result
 > - **Strictly diagonally dominant:** $`|a_{ii}| > \sum_{j \neq i} |a_{ij}|`$ for every row. This guarantees Jacobi converges.
 
 ### 12.1 Rounds and barriers
-Threads proceed in **rounds**; at the end of each round there's a **barrier synchronisation**: no thread passes until all have arrived. So each thread sees the others' previous-round updates. Data is shared by messages (when each value goes to few threads) or via shared variables. Applications: image processing, PDEs (weather, fluids), matrices, cellular automata.
+Threads proceed in **rounds**; at the end of each round there's a **barrier synchronisation**: no thread passes until all have arrived. So each thread sees the others' previous-round updates. Data is shared by messages (when each value goes to few threads) or via shared variables. Applications: image processing, PDEs (weather, fluids), matrices, cellular automata, security protocols.
 
 ```scala
 val barrier = new Barrier(p)     // threads 0..p-1
@@ -1556,6 +1665,8 @@ class PrefixSums(n: Int, a: Array[Int]){
   def apply(): Array[Int] = { run(|| (for(i <- 0 until n) yield summer(i))); sum }
 }
 ```
+`toSummers` channels are **buffered** (capacity 1) so that send and receive can be asynchronous: a summer's send doesn't wait for its receiver. Each summer receives at most one value per round, and the barrier stops rounds mixing, so capacity 1 suffices. (`require(n == a.size)`; test against a sequential prefix-sum.)
+
 **Why the barrier is essential:** without it a fast thread `me-2·gap` could already be in round $`r+1`$ and its message could reach `me` before the slow `me-gap`'s round-$`r`$ message, giving the wrong value.
 
 **Complexity:** $`\Theta(\log n)`$ rounds × $`\Theta(\log n)`$ per barrier $`= \Theta((\log n)^2)`$.
@@ -1579,6 +1690,30 @@ protected def update(a: Array[Array[Double]], b: Array[Double], x: Array[Double]
 }
 ```
 All $`x_i`$ must be updated **simultaneously** from the old vector, so use **two arrays** `oldX`, `newX` and swap them each iteration.
+
+```scala
+trait Jacobi{
+  val Epsilon = 0.000001   // tolerance
+  /** Find x with a x ≈ b, iterating until successive iterates differ by at most Epsilon. */
+  def solve(a: Array[Array[Double]], b: Array[Double]): Array[Double]
+}
+object SeqJacobi extends Jacobi{
+  def solve(a: Array[Array[Double]], b: Array[Double]): Array[Double] = {
+    val n = a.length; require(a.forall(_.length == n) && b.length == n)
+    var oldX, newX = new Array[Double](n); var done = false
+    while(!done){
+      done = true
+      for(i <- 0 until n){
+        newX(i) = update(a, b, oldX, i, n)
+        done &&= Math.abs(oldX(i)-newX(i)) < Epsilon
+      }
+      if(!done){ val t = oldX; oldX = newX; newX = t }   // swap arrays
+    }
+    newX
+  }
+}
+```
+(Updating `x(i)` in place for each `i` in turn would **not** have the same effect. **Testing:** compare the concurrent versions against `SeqJacobi`.)
 
 **Shared-memory concurrent version:** $`p`$ workers, each owning a strip of `height = n/p` rows. In each round, everyone **reads all of `oldX`** and **writes only its own strip of `newX`**. A combining barrier both separates rounds and decides termination.
 ```scala
@@ -1611,6 +1746,41 @@ Because of the barrier, all workers agree on which array is "old" in each round,
 **Alternative:** one shared array and two sub-rounds per round (read everything into locals, *barrier*, write your strip, *barrier*).
 
 **Message-passing version:** each worker keeps its own copy of `x`. Each round it computes its segment and sends `(me, newSegment, myDone)` to all others on buffered channels, copies in what it receives, then `barrier.sync(me)`. The barrier is needed so a fast worker's round-$`k+1`$ message can't overtake a slow worker's round-$`k`$ one. Optimisation: store `x` as `xs: Array[Array[Double]]` of shape $`p \times \text{height}`$ (abstraction `x = xs.flatten`) so each received block is inserted with one assignment. That gives $`O(\text{height} + p)`$ per round instead of $`O(n)`$, about 45% faster.
+
+```scala
+class JacobiMP0(p: Int) extends Jacobi{
+  private val barrier = new Barrier(p)
+  private type Msg = (Int, Array[Double], Boolean)               // (sender id, new segment, willing to stop?)
+  private val toWorker = Array.fill(p)(new BuffChan[Msg](p-1))   // indexed by receiver; p-1 msgs per round ⇒ sends never block
+  def solve(a: Array[Array[Double]], b: Array[Double]): Array[Double] = {
+    val n = a.length; require(n%p == 0); val height = n/p
+    var result: Array[Double] = null
+    def worker(me: Int) = thread{
+      val start = me*height; val end = (me+1)*height; var done = false
+      val x = new Array[Double](n)                                // my own copy of x
+      while(!done){
+        done = true
+        val newX = new Array[Double](height)                      // FRESH each round: arrays are sent by reference!
+        for(i <- start until end){
+          newX(i-start) = update(a, b, x, i, n)
+          done &&= Math.abs(x(i)-newX(i-start)) < Epsilon
+        }
+        for(w <- 1 until p) toWorker((me+w)%p)!(me, newX, done)  // send my segment to everyone else
+        for(i <- 0 until height) x(start+i) = newX(i)
+        for(k <- 0 until p-1){                                    // receive the others' segments
+          val (him, hisX, hisDone) = toWorker(me)?()
+          for(i <- 0 until height) x(him*height+i) = hisX(i)
+          done &&= hisDone
+        }
+        barrier.sync(me)                                          // end of round
+      }
+      if(me == 0) result = x
+    }
+    run(|| (for(i <- 0 until p) yield worker(i)))
+    result
+  }
+}
+```
 
 ### 12.4 Grids and neighbours
 For cellular automata, PDEs, image smoothing: give each thread a horizontal **strip**. Each round it sends its top row up and its bottom row down.
@@ -1674,6 +1844,8 @@ class ConcSet[A]{
 **Re-entrant:** a thread holding the lock may enter another `synchronized` block on the same object (e.g. `f` calls `g`, both synchronized).
 
 ### 13.3 Busy waiting: DON'T
+**Problem (single producer, single consumer):** the producer puts data in a one-place *slot*; the consumer must process **each piece exactly once**. A flag `filled` records whether the slot holds new data: the producer waits for `!filled`, the consumer for `filled`.
+
 ```scala
 class Slot[T]{  // BROKEN
   private var value = null.asInstanceOf[T]; private var filled = false
@@ -1681,7 +1853,7 @@ class Slot[T]{  // BROKEN
   def get: T = { while(!filled){ }; val result = value; filled = false; result }
 }
 ```
-It deadlocks after a few iterations: the JIT may turn `while(filled){}` into `if(filled) while(true){}`, the compiler may reorder the two writes, and caches may give stale values. And even if it worked, spinning wastes CPU and memory-bus bandwidth and doesn't scale. **Suspend and get notified instead.**
+It deadlocks after a few iterations: the JIT may turn `while(filled){}` into `if(filled) while(true){}`, the compiler may reorder the two writes in `put` (or the two reads in `get`), and caches may give stale values. And even if it worked, spinning wastes CPU and memory-bus bandwidth and doesn't scale. **Suspend and get notified instead.**
 
 ### 13.4 `wait`, `notify`, `notifyAll`
 - `wait()`: **suspend and release the lock** until another thread in the same monitor calls `notify()`; then the thread must **re-acquire the lock** (competing with others) before continuing.
@@ -1734,7 +1906,7 @@ Scala/Java use **signal-and-continue**: the notifier **keeps the lock** and carr
 
 So if your shared variables are only touched inside `synchronized` blocks, you can ignore caching and reordering.
 
-**Thread states (extended):** Running → Waiting (on `wait`) → (notify / spurious wake-up) → Blocked on lock → (obtain lock) → Runnable; plus I/O-blocked.
+**Thread states (slide diagram):** `start` → Runnable ⇄ Running (schedule / deschedule); Running → **Waiting** on `wait()`, left on `notify` or a spurious wake-up; Running → **Blocked** when blocking for a lock, left on obtaining it; Running → **IO Blocked** while blocking for I/O, left when the I/O completes; Running → Finished. Remember a notified thread must still **obtain the monitor lock** before it continues inside `synchronized`.
 
 ### 13.7 A one-one synchronous channel from a monitor
 ```scala
@@ -1773,6 +1945,8 @@ class ReadersWritersMonitor extends ReadersWritersLock{
   def writerLeave = synchronized{ writers = 0; notifyAll() }
 }
 ```
+**Waking up:** when a writer leaves (`notifyAll`), all waiting readers and writers become runnable. Either a **reader** gets the lock first: it sets `readers = 1` and enters; writers then see `readers > 0` and wait again, while the other readers also enter. Or a **writer** gets the lock first: it sets `writers = 1`, and everyone else waits again. (Hence `while`, not `if`.)
+
 **Starvation:** if readers keep overlapping so there's always ≥ 1 reader inside, writers **never** get in.
 
 **Fair version:** a writer **registers interest first**; then no *new* reader may enter, so the current readers drain away.
@@ -1834,6 +2008,16 @@ lock.release
 def mutex[A](comp: => A): A = { acquire; try{ comp } finally{ release } }
 ```
 `finally` guarantees release even if `comp` throws, and after the result is computed.
+
+Without `mutex` you write the bracketing by hand (and must copy a result **before** releasing):
+```scala
+object Counter{
+  private var x = 0; private val lock = new Lock
+  def inc  = { lock.acquire; x = x+1; lock.release }
+  def getX = { lock.acquire; val result = x; lock.release; result }
+}
+```
+`mutex` is more convenient, **particularly if a function has several branches, or returns a value that needs mutual exclusion to compute**. It plays the role of a `synchronized` block.
 ```scala
 object Counter{
   private var x = 0; private val lock = new Lock
@@ -1868,7 +2052,9 @@ def get(i: Int): T = locks(i).mutex{ a(i) }
 def get(i: Int): T = locks(i%numLocks).mutex{ a(i) }
 ```
 
-**Sharding:** split a set into $`n`$ independent **shards** (the object = their union); put $`x`$ in shard `x.hashCode mod n`, each with its own lock.
+**Sharding:** motivated by the single-lock `ConcSet` (§13.2) becoming a bottleneck. Split a set into $`n`$ independent **shards** (the object = their union); put $`x`$ in shard `x.hashCode mod n`, each with its own lock.
+If $`n`$ is a few times larger than the number of threads, and threads access shards independently, then **most operations won't be blocked**.
+
 ```scala
 class ShardedSet[A](n: Int){
   private val theSets = Array.fill(n)(scala.collection.mutable.Set[A]())  // theSets(i) holds x with indexFor(x)==i
@@ -2029,6 +2215,17 @@ object Barber{
   }
 }
 ```
+**The threads** (each must call the methods in the right order):
+```scala
+def barber = thread("Barber"){ while(true){
+  Barber.getNextCustomer          // now cutting hair
+  Barber.finishedCut }}
+def customer(me: Int) = thread("Customer"+me){ while(true){
+  Barber.getHaircut               // sitting in the chair
+  Barber.waitForHaircut }}        // haircut finished; leaves
+```
+**Signal sequence (slide's sequence diagram):** barber sets `barberAvailable = true` → `barberAvailableC` → customer sets `barberAvailable = false` → `chairOccupiedC` → barber sets `barberDone = true` → `barberDoneC` → customer sets `barberDone = false` → `customerLeftC`.
+
 **General advice for synchronisation puzzles:**
 - Use **state variables** that record which threads are in which wait, at least in **quiescent** states (when nobody is running/runnable). For example `barberAvailable` ⇔ barber is waiting in `getNextCustomer`; the customer who claims it clears it before signalling.
 - Track **how many** threads wait where, or how many operations have completed.
@@ -2282,7 +2479,7 @@ class CountingSemaphorePartialQueue[T] extends PartialQueue[T]{
 Patterns seen so far: concurrent datatypes; bag of tasks (± replacement); synchronous computation; interacting peers (central, fully connected, ring, tree); clients and servers. More:
 
 ### 17.1 Recursive parallelism
-Replace independent recursive calls (on **disjoint** data) by parallel threads.
+Replace independent recursive calls (on **disjoint** data) by parallel threads. Typical pattern: **base cases** computed directly; otherwise spawn a parallel thread per recursive call, maybe with a **controller** to tie the results together. (Lecture 3's message-passing quicksort was recursive parallelism too.)
 ```scala
 /** Thread to sort a[l..r). partition permutes a[l..r) and returns k with a[l..k) <= a(k) < a[k+1..r). */
 private def qsort(l: Int, r: Int): ThreadGroup = thread{
@@ -2323,6 +2520,8 @@ class Future[A](exp: => A){
 ```
 
 ### 17.5 Lock-free programming (beyond this course)
+So far races were avoided by (i) pure message passing with disjoint variables; (ii) letting different threads access each variable in different **states/phases**, coordinated by messages and/or barriers; (iii) **locking** (monitors, semaphores). Lock-free code instead allows races, so it must also cope with cache-consistency and compiler-reordering problems (§1.6).
+
 Locks and servers are **bottlenecks** that limit scaling. Lock-free code allows races but uses hardware atomics, chiefly **compare-and-set**:
 ```scala
 def compareAndSet(expected: Int, newValue: Int): Boolean = atomically{
@@ -2388,7 +2587,18 @@ class MyPipeSort(n: Int) extends PipeSort(n){
   def apply(): ThreadGroup = || (for(i <- 0 until n) yield comp(chans(i), chans(i+1)))
 }
 ```
-After passing $`k`$ components, the last $`k`$ values of the stream are the $`k`$ largest, in order; so $`n`$ components sort $`n`$ values. More than $`n`$ inputs won't be fully sorted. Messages: $`n`$ values on each of $`n+1`$ channels gives $`n(n+1)`$. Longest chain: the $`n`$ inputs to component 1 followed by each component's final output form a chain of about $`2n`$, so time is $`\Theta(n)`$.
+**(a) Testing rig:**
+```scala
+def doTest(n: Int) = {
+  val xs = Array.fill(n)(scala.util.Random.nextInt(100)); val ys = new Array[Int](n)
+  val ps = new MyPipeSort(n)
+  def sender   = thread{ for(x <- xs) ps.left!x; ps.left.endOfStream }
+  def receiver = thread{ for(i <- 0 until n) ys(i) = ps.right?() }
+  run(sender || ps() || receiver)
+  assert(xs.sorted.sameElements(ys))
+}   // repeat many times with random n
+```
+After passing $`k`$ components, the last $`k`$ values of the stream are the $`k`$ largest, in order; so $`n`$ components sort $`n`$ values. More than $`n`$ inputs won't be fully sorted. Messages: $`n`$ values on each of $`n+1`$ channels gives $`n(n+1)`$. Longest chain: each component's program order is `in1, in2, out1, in3, out2, …, in_n, out_{n-1}, out_n` and the channels are synchronous, so chains can zig-zag between adjacent channels and then staircase down the pipeline. The longest has length exactly $`5n-3`$ for $`n \ge 3`$ (checked by computing the longest path in the message-ordering graph), so time is $`\Theta(n)`$.
 
 **Q5, matrix multiplication with bag of tasks:** a task = a **block of rows** of $`c`$ (a single entry is far too small, since communication would dominate). Workers read `a`, `b` (read-only, so no races) and write disjoint rows of `c`.
 
@@ -2500,6 +2710,19 @@ class MenWomenServer{
 }
 ```
 Logging-based correctness, as first-order formulas over call/return events: every returned pair is **symmetric** (if man $`m`$ gets $`w`$ then woman $`w`$ gets $`m`$), each thread is in **at most one** pair per call, and the two calls of a pair **overlap in time**. Weakness: these only check the trace you happened to see (and only safety, not liveness).
+
+**Test rig:**
+```scala
+def doTest(n: Int) = {            // men "0".."n-1", women "n".."2n-1"; equal numbers so everyone terminates
+  val mw = new MenWomenServer; val partner = new Array[String](2*n)   // each thread writes its own slot
+  def man(i: Int)   = thread{ partner(i) = mw.manSync(i.toString) }
+  def woman(i: Int) = thread{ partner(i) = mw.womanSync(i.toString) }
+  run((|| (for(i <- 0 until n) yield man(i))) || (|| (for(i <- n until 2*n) yield woman(i))))
+  mw.shutdown
+  for(i <- 0 until n){ val w = partner(i).toInt; assert(n <= w && w < 2*n && partner(w) == i.toString) }
+}
+```
+(The symmetry check implies the pairing is a bijection. Checking that paired calls overlap in time needs logging of calls and returns.)
 
 **Q6, ring fold** $`f(\dots f(f(x_0,x_1),x_2)\dots,x_{n-1})`$. Stage 1: an accumulator travels $`0 \to 1 \to \dots \to n-1`$. Stage 2: node $`n-1`$ sends the answer round.
 ```scala
@@ -2705,6 +2928,27 @@ class ProducerConsumerSemaphore(n: Int) extends ProducerConsumer{
 }
 ```
 
+**Q4, "sum divisible by 3" with semaphores (passing the baton):**
+```scala
+class Div3Semaphores{
+  private var sum = 0                          // sum of ids of current users
+  private var waiting = 0                      // # threads blocked in enter
+  private val mutex = new MutexSemaphore
+  private val entry = new SignallingSemaphore  // blocked enters wait here
+  // Invariant: if mutex is up and waiting > 0 then sum % 3 != 0
+  /** Pass the baton to a waiting enter if it may now proceed; otherwise release the mutex. */
+  private def signal() = if(waiting > 0 && sum % 3 == 0) entry.up else mutex.up
+  def enter(id: Int) = {
+    mutex.down
+    if(sum % 3 != 0){ waiting += 1; mutex.up; entry.down; waiting -= 1 }  // woken holding the baton
+    assert(sum % 3 == 0); sum += id
+    signal()                                   // e.g. if id % 3 == 0, cascade to the next waiter
+  }
+  def exit(id: Int) = { mutex.down; sum -= id; signal() }
+}
+```
+**Why it works:** `entry.up` happens only when someone waits, and `mutex` stays down until the woken thread has done `entry.down`, so $`\texttt{entry.down}_n \prec \texttt{entry.up}_{n+1}`$ (no lost signal). The woken thread inherits mutual exclusion, so `sum % 3 == 0` still holds when it runs. Test with the same `Set[Int]` linearizability spec as Sheet 3 Q7.
+
 **Q5, bounded buffer with two counting semaphores:**
 ```scala
 class BoundedBuffer[T](n: Int){
@@ -2717,6 +2961,14 @@ class BoundedBuffer[T](n: Int){
 }
 ```
 (Always wait on the **counting** semaphore before taking `mutex`, as in §16.10.)
+
+**Linearizability test:**
+```scala
+type S = scala.collection.immutable.Queue[Int]
+def seqPut(x: Int)(q: S): (Unit, S) = { require(q.length < n); ((), q.enqueue(x)) }
+def seqGet(q: S): (Int, S)          = { require(q.nonEmpty); q.dequeue }
+// workers: half only put, half only get, equal iterations, so the test can't deadlock
+```
 
 **Q6, men/women with semaphores:**
 ```scala
