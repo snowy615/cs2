@@ -1,6 +1,6 @@
 # Machine Learning — Course Summary
 
-*Oxford CS Part A/B Machine Learning · lecture notes by Varun Kanade (MT 2023; summary slides by Seth Flaxman, MT 2024). Written for a reader with **no prior ML knowledge**: every topic starts from what problem it solves, then the maths. Split into parts because GitHub stops rendering maths beyond a few hundred formulas per file. (The folder has no lecture 2 file, so that lecture isn't covered here.)*
+*Oxford CS Part A/B Machine Learning · lecture notes by Varun Kanade (MT 2023; summary slides by Seth Flaxman, MT 2024). Written for a reader with **no prior ML knowledge**: every topic starts from what problem it solves, then the maths. Split into parts because GitHub stops rendering maths beyond a few hundred formulas per file. (Lecture 2 was a maths review with no notes file; its content, vectors, matrices, gradients and probability basics, is covered where needed in Parts 1 and 3.)*
 
 | File | Lectures | Covers |
 |---|---|---|
@@ -33,6 +33,7 @@ flowchart TD
 | Lecture | § here | Topic | Big idea in one line |
 |---|---|---|---|
 | 1 | 1 | Introduction | Learning = improving at a task with experience; supervised vs unsupervised; data and features matter. |
+| 2 | — | Maths review | Linear algebra, calculus and probability prerequisites (no notes file; see Part 1 §2.3, §3 and Part 3 §12). |
 | 3 | 2 | Linear regression | Least squares has a closed form $`(\mathbf{X}^\top\mathbf{X})^{-1}\mathbf{X}^\top\mathbf{y}`$; squared loss is outlier-sensitive. |
 | 4 | 3–4 | Maximum likelihood | A noise model *derives* the loss: Gaussian ⇒ squared, Laplace ⇒ absolute. |
 | 5 | 5–6 | Basis expansion, overfitting | Non-linear features keep the linear machinery; complexity trades bias for variance; learning curves diagnose. |
