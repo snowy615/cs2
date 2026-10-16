@@ -26,7 +26,7 @@
 
 **Two historical roots you'll meet again:**
 - **Fisher (1936), iris dataset:** classify flowers using a *linear function* of 4 measurements → Fisher Linear Discriminant Analysis (see LDA, Part 4). A linear combination of several measurements separates classes better than any single one.
-- **Rosenblatt's perceptron:** output $`\operatorname{sign}(w_0 + w_1x_1 + \dots + w_Dx_D)`$; weighted sum, threshold. An algorithm adjusts weights when a prediction is wrong, and under certain assumptions (e.g. linearly separable data, cf. Part 4) it **provably converges** to a correct classifier. (Turing, 1950, had already argued that learning must be part of any intelligent system: simulate the child's mind, then educate it.) A *deep neural network* is many such units stacked in layers, with smooth activations instead of a hard threshold (Part 5).
+- **Rosenblatt's perceptron:** output $`\mathrm{sign}(w_0 + w_1x_1 + \dots + w_Dx_D)`$; weighted sum, threshold. An algorithm adjusts weights when a prediction is wrong, and under certain assumptions (e.g. linearly separable data, cf. Part 4) it **provably converges** to a correct classifier. (Turing, 1950, had already argued that learning must be part of any intelligent system: simulate the child's mind, then educate it.) A *deep neural network* is many such units stacked in layers, with smooth activations instead of a hard threshold (Part 5).
 
 **Practical concern:** a learning algorithm can only do useful things if given **useful data and features**. Classic failure: dogs photographed outside, cats inside ⇒ a classifier that just counts green pixels. Spam data from the 1990s is useless today.
 
@@ -65,11 +65,11 @@ Prediction $`\widehat{y}(x) = w_0 + w_1 x`$. The **least squares** estimate mini
 ```
 Define empirical statistics (each point has probability $`1/N`$):
 ```math
-\bar{x} = \frac{\sum_i x_i}{N}, \quad \bar{y} = \frac{\sum_i y_i}{N}, \quad \widehat{\operatorname{var}}(x) = \frac{\sum_i x_i^2}{N} - \bar{x}^2, \quad \widehat{\operatorname{cov}}(x,y) = \frac{\sum_i x_iy_i}{N} - \bar{x}\bar{y}.
+\bar{x} = \frac{\sum_i x_i}{N}, \quad \bar{y} = \frac{\sum_i y_i}{N}, \quad \widehat{\mathrm{var}}(x) = \frac{\sum_i x_i^2}{N} - \bar{x}^2, \quad \widehat{\mathrm{cov}}(x,y) = \frac{\sum_i x_iy_i}{N} - \bar{x}\bar{y}.
 ```
 The first equation gives $`w_0 = \bar{y} - w_1\bar{x}`$. Substituting into the second and simplifying:
 ```math
-w_1 = \frac{\widehat{\operatorname{cov}}(x,y)}{\widehat{\operatorname{var}}(x)}, \qquad w_0 = \bar{y} - w_1\bar{x}.
+w_1 = \frac{\widehat{\mathrm{cov}}(x,y)}{\widehat{\mathrm{var}}(x)}, \qquad w_0 = \bar{y} - w_1\bar{x}.
 ```
 **Intuition:** the slope is "how much $`y`$ co-varies with $`x`$, per unit of variance in $`x`$"; the intercept makes the line pass through the mean point $`(\bar{x}, \bar{y})`$.
 
@@ -117,7 +117,7 @@ The least-squares approach is a pure **"optimisation view"**: pick a sensible lo
 > **✅ Key takeaways**
 > 1. A linear model is $`\widehat{y} = \mathbf{w}\cdot\mathbf{x}`$ with a constant feature $`x_0 = 1`$ absorbing the intercept.
 > 2. Least squares has a **closed form** $`\mathbf{w} = (\mathbf{X}^\top\mathbf{X})^{-1}\mathbf{X}^\top\mathbf{y}`$, found by setting the gradient to zero using the two matrix-calculus rules.
-> 3. The 1-D answer $`w_1 = \widehat{\operatorname{cov}}(x,y)/\widehat{\operatorname{var}}(x)`$ is the same formula in disguise.
+> 3. The 1-D answer $`w_1 = \widehat{\mathrm{cov}}(x,y)/\widehat{\mathrm{var}}(x)`$ is the same formula in disguise.
 > 4. Invertibility needs linearly independent features and $`N > D`$; one-hot encode with one category dropped.
 > 5. Squared loss is sensitive to outliers; absolute loss is robust but has no closed form.
 
@@ -135,17 +135,17 @@ The least-squares approach is a pure **"optimisation view"**: pick a sensible lo
 
 > [!NOTE]
 > **📖 Key definitions**
-> - **Covariance:** $`\operatorname{cov}(X,Y) = \mathbb{E}[(X-\mathbb{E}X)(Y-\mathbb{E}Y)] = \mathbb{E}[XY] - \mathbb{E}[X]\mathbb{E}[Y]`$. Measures *linear* relationship; depends on units (metres vs km changes it by 1000).
-> - **Correlation (Pearson):** $`\operatorname{corr}(X,Y) = \dfrac{\operatorname{cov}(X,Y)}{\sqrt{\operatorname{var}(X)\operatorname{var}(Y)}} \in [-1, 1]`$, scale-free.
-> - **Covariance matrix** of $`\mathbf{x} \in \mathbb{R}^D`$: $`\operatorname{cov}(\mathbf{x}) = \mathbb{E}[(\mathbf{x} - \mathbb{E}\mathbf{x})(\mathbf{x}-\mathbb{E}\mathbf{x})^\top]`$, entry $`(i,j)`$ = $`\operatorname{cov}(X_i, X_j)`$, diagonal = variances. (Correlation matrix: same with correlations; diagonal all 1.)
+> - **Covariance:** $`\mathrm{cov}(X,Y) = \mathbb{E}[(X-\mathbb{E}X)(Y-\mathbb{E}Y)] = \mathbb{E}[XY] - \mathbb{E}[X]\mathbb{E}[Y]`$. Measures *linear* relationship; depends on units (metres vs km changes it by 1000).
+> - **Correlation (Pearson):** $`\mathrm{corr}(X,Y) = \dfrac{\mathrm{cov}(X,Y)}{\sqrt{\mathrm{var}(X)\mathrm{var}(Y)}} \in [-1, 1]`$, scale-free.
+> - **Covariance matrix** of $`\mathbf{x} \in \mathbb{R}^D`$: $`\mathrm{cov}(\mathbf{x}) = \mathbb{E}[(\mathbf{x} - \mathbb{E}\mathbf{x})(\mathbf{x}-\mathbb{E}\mathbf{x})^\top]`$, entry $`(i,j)`$ = $`\mathrm{cov}(X_i, X_j)`$, diagonal = variances. (Correlation matrix: same with correlations; diagonal all 1.)
 > - **Univariate Gaussian** $`\mathcal{N}(\mu, \sigma^2)`$: $`p(x) = \dfrac{1}{\sqrt{2\pi}\sigma}\exp\Big(-\dfrac{(x-\mu)^2}{2\sigma^2}\Big)`$.
 > - **Multivariate Gaussian** $`\mathcal{N}(\boldsymbol\mu, \boldsymbol\Sigma)`$ in $`D`$ dimensions: $`p(\mathbf{x}) = \dfrac{1}{(2\pi)^{D/2}\lvert\boldsymbol\Sigma\rvert^{1/2}}\exp\Big(-\tfrac12(\mathbf{x}-\boldsymbol\mu)^\top\boldsymbol\Sigma^{-1}(\mathbf{x}-\boldsymbol\mu)\Big)`$.
-> - **Laplace distribution** $`\operatorname{Lap}(\mu, b)`$: $`p(x) = \dfrac{1}{2b}\exp\Big(-\dfrac{\lvert x - \mu\rvert}{b}\Big)`$; mean $`\mu`$, variance $`2b^2`$. Heavier tails than the Gaussian.
+> - **Laplace distribution** $`\mathrm{Lap}(\mu, b)`$: $`p(x) = \dfrac{1}{2b}\exp\Big(-\dfrac{\lvert x - \mu\rvert}{b}\Big)`$; mean $`\mu`$, variance $`2b^2`$. Heavier tails than the Gaussian.
 > - **Likelihood** of i.i.d. observations under parameters $`\theta`$: $`p(x_1, \dots, x_N \mid \theta) = \prod_{i=1}^N p(x_i \mid \theta)`$.
 
-**Independence vs correlation:** independent ⇒ correlation 0, but **not conversely**. Example: $`X \sim U[-1,1]`$, $`Y = X^2`$: $`\operatorname{cov}(X,Y) = \mathbb{E}X^3 - \mathbb{E}X\,\mathbb{E}X^2 = 0`$, yet $`Y`$ is a function of $`X`$.
+**Independence vs correlation:** independent ⇒ correlation 0, but **not conversely**. Example: $`X \sim U[-1,1]`$, $`Y = X^2`$: $`\mathrm{cov}(X,Y) = \mathbb{E}X^3 - \mathbb{E}X\,\mathbb{E}X^2 = 0`$, yet $`Y`$ is a function of $`X`$.
 
-**Eigen-structure of a covariance matrix.** Solve $`\boldsymbol\Sigma\mathbf{v}_i = \lambda_i\mathbf{v}_i`$ and order $`\lvert\lambda_1\rvert > \lvert\lambda_2\rvert > \dots`$. The eigenvector with the **largest eigenvalue is the direction of greatest variance**; the smallest, least variance. (This is the seed of PCA, Part 6.) Conversely you can *build* a covariance from chosen directions: $`\boldsymbol\Sigma = \mathbf{Q}\boldsymbol\Lambda\mathbf{Q}^{-1}`$ with $`\boldsymbol\Lambda = \operatorname{diag}(\lambda_1, \dots, \lambda_D)`$ and $`\mathbf{Q} = [\mathbf{v}_1 \cdots \mathbf{v}_D]`$.
+**Eigen-structure of a covariance matrix.** Solve $`\boldsymbol\Sigma\mathbf{v}_i = \lambda_i\mathbf{v}_i`$ and order $`\lvert\lambda_1\rvert > \lvert\lambda_2\rvert > \dots`$. The eigenvector with the **largest eigenvalue is the direction of greatest variance**; the smallest, least variance. (This is the seed of PCA, Part 6.) Conversely you can *build* a covariance from chosen directions: $`\boldsymbol\Sigma = \mathbf{Q}\boldsymbol\Lambda\mathbf{Q}^{-1}`$ with $`\boldsymbol\Lambda = \mathrm{diag}(\lambda_1, \dots, \lambda_D)`$ and $`\mathbf{Q} = [\mathbf{v}_1 \cdots \mathbf{v}_D]`$.
 
 ---
 
@@ -154,7 +154,7 @@ The least-squares approach is a pure **"optimisation view"**: pick a sensible lo
 > [!NOTE]
 > **📖 Key definitions**
 > - **Maximum likelihood principle:** choose the parameters $`\theta`$ under which the observed data are **most probable**: $`\theta_{\text{ML}} = \arg\max_\theta p(\mathcal{D}\mid\theta)`$.
-> - **Log-likelihood** $`\operatorname{LL} = \log p(\mathcal{D}\mid\theta)`$; **negative log-likelihood** $`\operatorname{NLL} = -\operatorname{LL}`$. Since $`\log`$ is increasing, maximising LL = maximising likelihood = minimising NLL. Products become sums.
+> - **Log-likelihood** $`\mathrm{LL} = \log p(\mathcal{D}\mid\theta)`$; **negative log-likelihood** $`\mathrm{NLL} = -\mathrm{LL}`$. Since $`\log`$ is increasing, maximising LL = maximising likelihood = minimising NLL. Products become sums.
 > - **Discriminative model:** model only $`p(y \mid \mathbf{x}, \mathbf{w})`$; inputs are treated as fixed. **Generative model:** model the joint $`p(\mathbf{x}, y)`$ too (Part 4).
 > - **Aleatoric uncertainty:** randomness *in the data itself* (noise); not reducible with more data. (Epistemic uncertainty, about the parameters, is in Part 2.)
 
@@ -175,7 +175,7 @@ Geometrically (Fig. 5a of the notes): the likelihood is the *product of the dens
 
 **Negative log-likelihood:**
 ```math
-\operatorname{NLL}(\mathbf{y}\mid\mathbf{X},\mathbf{w},\sigma) = \frac{1}{2\sigma^2}(\mathbf{X}\mathbf{w}-\mathbf{y})^\top(\mathbf{X}\mathbf{w}-\mathbf{y}) + \frac N2\log(2\pi\sigma^2).
+\mathrm{NLL}(\mathbf{y}\mid\mathbf{X},\mathbf{w},\sigma) = \frac{1}{2\sigma^2}(\mathbf{X}\mathbf{w}-\mathbf{y})^\top(\mathbf{X}\mathbf{w}-\mathbf{y}) + \frac N2\log(2\pi\sigma^2).
 ```
 As a function of $`\mathbf{w}`$, this is the least-squares objective $`\frac{1}{2N}(\mathbf{X}\mathbf{w}-\mathbf{y})^\top(\mathbf{X}\mathbf{w}-\mathbf{y})`$ **up to a positive multiplicative and an additive constant**. Hence
 
@@ -191,10 +191,10 @@ As a function of $`\mathbf{w}`$, this is the least-squares objective $`\frac{1}{
 ### 4.2 Outliers and the Laplace noise model
 Since MLE under Gaussian noise = least squares, it is equally **sensitive to outliers**. Reason: the Gaussian has very **light tails** (little mass a few σ from the mean), so an outlier is "impossible" under the model and the fit contorts to accommodate it. A **heavier-tailed** noise model expects occasional big deviations:
 ```math
-p(y\mid\mathbf{w},\mathbf{x}) = \operatorname{Lap}(y \mid \mathbf{w}\cdot\mathbf{x}, b), \qquad p(\mathbf{y}\mid\mathbf{X},\mathbf{w},b) = \frac{1}{(2b)^N}\exp\Big(-\frac1b\sum_{i=1}^N\lvert y_i - \mathbf{w}^\top\mathbf{x}_i\rvert\Big),
+p(y\mid\mathbf{w},\mathbf{x}) = \mathrm{Lap}(y \mid \mathbf{w}\cdot\mathbf{x}, b), \qquad p(\mathbf{y}\mid\mathbf{X},\mathbf{w},b) = \frac{1}{(2b)^N}\exp\Big(-\frac1b\sum_{i=1}^N\lvert y_i - \mathbf{w}^\top\mathbf{x}_i\rvert\Big),
 ```
 ```math
-\operatorname{NLL}(\mathbf{y}\mid\mathbf{X},\mathbf{w},b) = \frac1b\sum_{i=1}^N\lvert y_i - \mathbf{w}^\top\mathbf{x}_i\rvert + N\log(2b).
+\mathrm{NLL}(\mathbf{y}\mid\mathbf{X},\mathbf{w},b) = \frac1b\sum_{i=1}^N\lvert y_i - \mathbf{w}^\top\mathbf{x}_i\rvert + N\log(2b).
 ```
 So **MLE under Laplace noise = minimising the absolute loss**, exactly the robust alternative from §2.5. No closed form; see Part 3 (linear programming / subgradients). ($`b_{\text{ML}}`$ = mean absolute residual, by the same differentiation trick.)
 
@@ -213,4 +213,4 @@ So **MLE under Laplace noise = minimising the absolute loss**, exactly the robus
 > - ❌ Forgetting independence when writing the likelihood as a product.
 > - ❌ "MLE under Gaussian noise differs from least squares." ✅ Identical $`\mathbf{w}`$; MLE additionally gives $`\sigma^2`$.
 > - ❌ "Dividing by $`N-1`$ for $`\sigma^2_{\text{ML}}`$." ✅ The MLE divides by $`N`$ (it's biased, but that's what MLE gives).
-> - ❌ Mixing up the Laplace scale $`b`$ with a variance: $`\operatorname{var} = 2b^2`$.
+> - ❌ Mixing up the Laplace scale $`b`$ with a variance: $`\mathrm{var} = 2b^2`$.

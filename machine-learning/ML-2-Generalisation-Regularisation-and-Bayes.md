@@ -154,7 +154,7 @@ No closed form (the $`\lvert w_i\rvert`$ terms aren't differentiable at 0); use 
 > ```math
 > I(X, Y) = \sum_x\sum_y p(X=x, Y=y)\,\log\frac{p(X=x, Y=y)}{p(X=x)\,p(Y=y)} \quad (= 0 \text{ iff independent}).
 > ```
-> (Equivalently $`\operatorname{KL}\big(p(x,y)\,\|\,p(x)p(y)\big)`$; probabilities estimated from the training set.)
+> (Equivalently $`\mathrm{KL}\big(p(x,y)\,\|\,p(x)p(y)\big)`$; probabilities estimated from the training set.)
 
 **Procedure:** (1) train on the training set for each hyperparameter value; (2) evaluate on validation; (3) pick the best; (4) **retrain on training + validation** with the chosen hyperparameter (more data = better model); (5) report on the test set once.
 
@@ -237,8 +237,8 @@ p(\mathbf{w}\mid\mathbf{X},\mathbf{y}) \propto \exp\Big(-\frac{(\mathbf{y}-\math
 
 | Regulariser $`\mathcal{R}(\mathbf{w})`$ | Prior $`p(\mathbf{w})`$ | Estimator |
 |---|---|---|
-| $`\frac{\lambda}{2\sigma^2}\mathbf{w}^\top\mathbf{w}`$ | $`\mathcal{N}\big(\mathbf{0}, \operatorname{diag}(\sigma^2/\lambda)\big)`$, Gaussian | **Ridge** |
-| $`\frac{\lambda}{2\sigma^2}\sum_i\lvert w_i\rvert`$ | $`\prod_i \operatorname{Lap}(0, 2\sigma^2/\lambda)`$, Laplace | **Lasso** |
+| $`\frac{\lambda}{2\sigma^2}\mathbf{w}^\top\mathbf{w}`$ | $`\mathcal{N}\big(\mathbf{0}, \mathrm{diag}(\sigma^2/\lambda)\big)`$, Gaussian | **Ridge** |
+| $`\frac{\lambda}{2\sigma^2}\sum_i\lvert w_i\rvert`$ | $`\prod_i \mathrm{Lap}(0, 2\sigma^2/\lambda)`$, Laplace | **Lasso** |
 | $`\lim_{\lambda\to0}\frac{\lambda}{2\sigma^2}\mathbf{w}^\top\mathbf{w}`$ | Gaussian with infinite variance = **improper uniform** prior | **MLE / least squares** |
 
 **Interpretation:** both priors are centred at $`\mathbf{w} = \mathbf{0}`$ ("weights are probably small"), with $`\lambda`$ controlling confidence: larger $`\lambda`$ = tighter prior = more shrinkage. For equal variance the Laplace is more peaked at 0 and heavier-tailed than the Gaussian (Part 1, Fig. 7 of lecture 4). What really produces **sparsity** is the **cusp at 0**: the Laplace penalty $`-\log p(w_i) = \lvert w_i\rvert/b + \text{const}`$ has slope $`\pm1/b`$ at $`w_i = 0`$, so small weights get pushed *exactly* to 0, whereas the Gaussian penalty $`w_i^2`$ has zero slope at 0 and only shrinks.

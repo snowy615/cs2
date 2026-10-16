@@ -29,7 +29,7 @@
 
 So
 ```math
-\mathbb{E}X = G'(1), \qquad \operatorname{var}(X) = G''(1) + G'(1) - \big[G'(1)\big]^2 .
+\mathbb{E}X = G'(1), \qquad \mathrm{var}(X) = G''(1) + G'(1) - \big[G'(1)\big]^2 .
 ```
 
 **Theorem 3.2 (uniqueness).** If $`X`$ and $`Y`$ have the same pgf, they have the same distribution (immediate from 3.1(a)).
@@ -102,7 +102,7 @@ Assume i.i.d. $`X_i`$ with mean $`\mu`$, variance $`\sigma^2`$, and mgf $`M`$ fi
 ```
 which is the mgf of the constant $`\mu`$. Continuity theorem ⇒ $`S_n/n \xrightarrow{d} \mu`$, hence in probability (Theorem 2.6). ∎
 
-**CLT.** Let $`Y_i = X_i - \mu`$, with mgf $`M_Y(h) = 1 + h\,\mathbb{E}Y + \tfrac{h^2}{2}\operatorname{var}(Y) + o(h^2) = 1 + \tfrac{h^2\sigma^2}{2} + o(h^2)`$. The mgf of $`\frac{S_n - n\mu}{\sigma\sqrt n}`$ is
+**CLT.** Let $`Y_i = X_i - \mu`$, with mgf $`M_Y(h) = 1 + h\,\mathbb{E}Y + \tfrac{h^2}{2}\mathrm{var}(Y) + o(h^2) = 1 + \tfrac{h^2\sigma^2}{2} + o(h^2)`$. The mgf of $`\frac{S_n - n\mu}{\sigma\sqrt n}`$ is
 ```math
 \widetilde{M}_n(t) = \mathbb{E}\prod_{i=1}^n \exp\Big(\frac{t(X_i - \mu)}{\sigma\sqrt n}\Big) = M_Y\Big(\frac{t}{\sigma\sqrt n}\Big)^n = \Big(1 + \frac{t^2}{2n} + o\Big(\frac{t^2}{n}\Big)\Big)^n \to e^{t^2/2},
 ```
@@ -114,7 +114,7 @@ the mgf of $`N(0,1)`$. Continuity theorem ⇒ CLT. ∎
 Apply Markov to $`e^{tX}`$ instead of $`(X-\mu)^2`$.
 
 **Simple random walk.** $`X_i = \pm 1`$ with probability $`\tfrac12`$ each, $`S_n = X_1 + \dots + X_n`$. CLT says $`S_n`$ is of order $`\sqrt n`$, so $`\mathbb{P}(\lvert S_n\rvert > na) \to 0`$ for $`a > 0`$. But how fast?
-- **Chebyshev:** $`\mathbb{E}S_n = 0`$ and $`\operatorname{var}S_n = n`$, so $`\mathbb{P}(\lvert S_n\rvert > na) \le \dfrac{n}{(na)^2} = \dfrac{1}{na^2}`$. Slow.
+- **Chebyshev:** $`\mathbb{E}S_n = 0`$ and $`\mathrm{var}\,S_n = n`$, so $`\mathbb{P}(\lvert S_n\rvert > na) \le \dfrac{n}{(na)^2} = \dfrac{1}{na^2}`$. Slow.
 - **mgf:** $`\mathbb{E}e^{tX_i} = \frac{e^t + e^{-t}}{2} = \cosh t \le e^{t^2/2}`$ (compare power series coefficients). For any $`t > 0`$:
 ```math
 \mathbb{P}(S_n > na) = \mathbb{P}\big(e^{tS_n} > e^{tna}\big) \le \frac{\mathbb{E}e^{tS_n}}{e^{tna}} = \Big(\frac{\mathbb{E}e^{tX_1}}{e^{ta}}\Big)^n \le \big(e^{t^2/2 - ta}\big)^n .
@@ -164,7 +164,7 @@ so $`S_n/n`$ **has the same Cauchy distribution as $`X_1`$**: no LLN, no CLT.
 > **⚠️ Common misconceptions & errors**
 > - ❌ "$`M(t) = \frac{\lambda}{\lambda - t}`$ for all $`t`$." ✅ Only for $`t < \lambda`$; otherwise $`M = \infty`$. **Always give the domain.**
 > - ❌ Applying mgf uniqueness/continuity when the mgf is infinite near 0 (Cauchy, Pareto). ✅ Use characteristic functions.
-> - ❌ "$`G'(1)`$ is the variance" or "$`G''(1) = \mathbb{E}X^2`$." ✅ $`G''(1) = \mathbb{E}[X(X-1)]`$, so $`\operatorname{var} = G''(1) + G'(1) - G'(1)^2`$.
+> - ❌ "$`G'(1)`$ is the variance" or "$`G''(1) = \mathbb{E}X^2`$." ✅ $`G''(1) = \mathbb{E}[X(X-1)]`$, so $`\mathrm{var} = G''(1) + G'(1) - G'(1)^2`$.
 > - ❌ "$`M_{X+Y} = M_X M_Y`$ always." ✅ Needs **independence**.
 > - ❌ "$`G_S = G_X(G_N)`$" for random sums. ✅ It's $`G_N(G_X(z))`$ (outer = number of terms), and $`N`$ must be independent of the $`X_i`$.
 > - ❌ "The average of i.i.d. samples always settles down." ✅ Cauchy: $`S_n/n \overset{d}{=} X_1`$ for all $`n`$.
@@ -183,7 +183,7 @@ so $`S_n/n`$ **has the same Cauchy distribution as $`X_1`$**: no LLN, no CLT.
 > ```math
 > J(u,v) = \det\begin{pmatrix} \partial x/\partial u & \partial x/\partial v \\ \partial y/\partial u & \partial y/\partial v\end{pmatrix} = \frac{\partial x}{\partial u}\frac{\partial y}{\partial v} - \frac{\partial x}{\partial v}\frac{\partial y}{\partial u}.
 > ```
-> - **Correlation coefficient:** $`\rho = \dfrac{\operatorname{cov}(X,Y)}{\sigma_X\sigma_Y}`$.
+> - **Correlation coefficient:** $`\rho = \dfrac{\mathrm{cov}(X,Y)}{\sigma_X\sigma_Y}`$.
 > - **Conditional probability:** $`\mathbb{P}(B \mid A) = \mathbb{P}(A \cap B)/\mathbb{P}(A)`$, defined only for $`\mathbb{P}(A) > 0`$.
 > - **Conditional density** of $`Y`$ given $`X = x`$ (for $`f_X(x) > 0`$):
 > ```math
@@ -245,7 +245,7 @@ Set $`\mathbf{W} = A\mathbf{Z} + \boldsymbol{\mu}`$ with $`A`$ an invertible $`n
 ```math
 f_{\mathbf{W}}(\mathbf{w}) = \frac{1}{(2\pi)^{n/2}\lvert\det A\rvert}\exp\Big(-\tfrac12(\mathbf{w} - \boldsymbol\mu)^T(AA^T)^{-1}(\mathbf{w}-\boldsymbol\mu)\Big).
 ```
-$`\Sigma = AA^T`$ is the **covariance matrix**: $`\operatorname{cov}(W_i, W_j) = \Sigma_{ij}`$. This is the **multivariate normal** with mean $`\boldsymbol\mu`$ and covariance $`\Sigma`$.
+$`\Sigma = AA^T`$ is the **covariance matrix**: $`\mathrm{cov}(W_i, W_j) = \Sigma_{ij}`$. This is the **multivariate normal** with mean $`\boldsymbol\mu`$ and covariance $`\Sigma`$.
 
 **Bivariate case** ($`X = W_1`$, $`Y = W_2`$), with $`\rho \in (-1,1)`$:
 ```math

@@ -23,12 +23,12 @@
 > **📖 Key definitions**
 > - **PCA (principal components analysis):** dimensionality reduction that gives a compact representation with minimal information loss. It assumes the data lie close to a low-dimensional *linear* manifold because the variables are correlated; the principal components are **uncorrelated** directions. Often a preprocessing step before nearest-neighbour search or clustering; can be kernelised for non-linear manifolds.
 > - **PCA goal:** given $`n`$ data vectors in $`\mathbb{R}^m`$ (mean-centred), find $`k \ll m`$ **orthonormal** directions $`\mathbf{u}_1, \dots, \mathbf{u}_k`$ ("principal components") such that each $`\mathbf{x}_i \approx z_{i1}\mathbf{u}_1 + \dots + z_{ik}\mathbf{u}_k`$ as well as possible. $`\mathbf{u}_1`$ = direction of greatest variance, $`\mathbf{u}_2`$ = greatest variance orthogonal to $`\mathbf{u}_1`$, etc. Output: a compact, lower-dimensional, hopefully less noisy representation $`\mathbf{z}_i \in \mathbb{R}^k`$. (Example 1: 1,400 European genomes with $`m \approx 200{,}000`$ project onto 2 components that recover the map of Europe.)
-> - **SVD** of a real $`m\times n`$ matrix $`\mathbf{A}`$ of rank $`r`$: $`\mathbf{A} = \mathbf{U}\boldsymbol\Sigma\mathbf{V}^\top`$ with $`\mathbf{U}`$ ($`m\times r`$, $`\mathbf{U}^\top\mathbf{U} = \mathbf{I}_r`$), $`\mathbf{V}`$ ($`n\times r`$, $`\mathbf{V}^\top\mathbf{V} = \mathbf{I}_r`$), $`\boldsymbol\Sigma = \operatorname{diag}(\sigma_1, \dots, \sigma_r)`$ with $`\sigma_1 \ge \dots \ge \sigma_r > 0`$ the **singular values**. Columns of $`\mathbf{U}`$: **left singular vectors**; of $`\mathbf{V}`$: **right singular vectors**. Equivalently
+> - **SVD** of a real $`m\times n`$ matrix $`\mathbf{A}`$ of rank $`r`$: $`\mathbf{A} = \mathbf{U}\boldsymbol\Sigma\mathbf{V}^\top`$ with $`\mathbf{U}`$ ($`m\times r`$, $`\mathbf{U}^\top\mathbf{U} = \mathbf{I}_r`$), $`\mathbf{V}`$ ($`n\times r`$, $`\mathbf{V}^\top\mathbf{V} = \mathbf{I}_r`$), $`\boldsymbol\Sigma = \mathrm{diag}(\sigma_1, \dots, \sigma_r)`$ with $`\sigma_1 \ge \dots \ge \sigma_r > 0`$ the **singular values**. Columns of $`\mathbf{U}`$: **left singular vectors**; of $`\mathbf{V}`$: **right singular vectors**. Equivalently
 > ```math
 > \mathbf{A} = \sum_{i=1}^r\sigma_i\mathbf{u}_i\mathbf{v}_i^\top \quad\text{(sum of } r \text{ rank-one matrices)}, \qquad \mathbf{A}\mathbf{v}_i = \sigma_i\mathbf{u}_i .
 > ```
 > - **Full SVD:** pad $`\mathbf{U}`$ to $`m\times m`$ orthogonal, $`\mathbf{V}`$ to $`n\times n`$ orthogonal, $`\boldsymbol\Sigma`$ to $`m\times n`$ with zeros: "rotation, scaling, rotation". (The version above is the *reduced* SVD.)
-> - **Frobenius norm:** $`\lVert\mathbf{A}\rVert_F = \sqrt{\sum_{i,j}a_{ij}^2} = \sqrt{\operatorname{trace}(\mathbf{A}^\top\mathbf{A})}`$.
+> - **Frobenius norm:** $`\lVert\mathbf{A}\rVert_F = \sqrt{\sum_{i,j}a_{ij}^2} = \sqrt{\mathrm{trace}(\mathbf{A}^\top\mathbf{A})}`$.
 
 ### 27.1 Existence (Theorem 1): every matrix has an SVD
 *Proof sketch (the construction matters).* Define $`\mathbf{v}_1, \mathbf{v}_2, \dots`$ greedily:
@@ -48,9 +48,9 @@ whose derivative at $`t = 0`$ is $`2\sigma_i\sigma_j\mathbf{u}_i^\top\mathbf{u}_
 
 *Proof.* With a full SVD, $`\mathbf{A}^\top\mathbf{A}\mathbf{V} = (\mathbf{U}\boldsymbol\Sigma\mathbf{V}^\top)^\top(\mathbf{U}\boldsymbol\Sigma\mathbf{V}^\top)\mathbf{V} = \mathbf{V}\boldsymbol\Sigma^\top\mathbf{U}^\top\mathbf{U}\boldsymbol\Sigma\mathbf{V}^\top\mathbf{V} = \mathbf{V}\boldsymbol\Sigma^\top\boldsymbol\Sigma = \mathbf{V}\boldsymbol\Sigma^2`$ (using $`\mathbf{U}^\top\mathbf{U} = \mathbf{I}`$, $`\mathbf{V}^\top\mathbf{V} = \mathbf{I}`$). So each $`\mathbf{v}_i`$ is an eigenvector with eigenvalue $`\sigma_i^2`$; the remaining columns of $`\mathbf{V}`$ span the null eigenspace. ∎ Consequence: singular values are **unique** (SVDs aren't, but the $`\sigma_i`$ are). Alternative route to existence: diagonalise the symmetric PSD matrix $`\mathbf{A}^\top\mathbf{A}`$ (footnote 2).
 
-Since $`\mathbf{A}^\top\mathbf{A} = \mathbf{V}\boldsymbol\Sigma^2\mathbf{V}^\top`$ and $`\operatorname{trace}`$ is invariant under this:
+Since $`\mathbf{A}^\top\mathbf{A} = \mathbf{V}\boldsymbol\Sigma^2\mathbf{V}^\top`$ and $`\mathrm{trace}`$ is invariant under this:
 ```math
-\lVert\mathbf{A}\rVert_F^2 = \operatorname{trace}(\mathbf{A}^\top\mathbf{A}) = \operatorname{trace}(\boldsymbol\Sigma^\top\boldsymbol\Sigma) = \sigma_1^2 + \dots + \sigma_r^2 .
+\lVert\mathbf{A}\rVert_F^2 = \mathrm{trace}(\mathbf{A}^\top\mathbf{A}) = \mathrm{trace}(\boldsymbol\Sigma^\top\boldsymbol\Sigma) = \sigma_1^2 + \dots + \sigma_r^2 .
 ```
 
 ---
@@ -79,7 +79,7 @@ Notation $`\sigma_i(\mathbf{A})`$ = $`i`$-th singular value ($`0`$ beyond the ra
 
 **Lemma 1.** If $`\mathbf{B}`$ has rank $`\le k`$ then $`\sigma_{k+i}(\mathbf{A}) \le \sigma_i(\mathbf{A} - \mathbf{B})`$ for all $`i`$.
 
-*Case $`i = 1`$.* $`\ker\mathbf{B}`$ has dimension $`\ge n - k`$, so it meets $`\operatorname{span}(\mathbf{v}_1, \dots, \mathbf{v}_{k+1})`$ (dimension $`k+1`$) in some unit vector $`\mathbf{w}`$. Then $`\lVert\mathbf{A}\mathbf{w}\rVert = \lVert(\mathbf{A} - \mathbf{B})\mathbf{w}\rVert \le \sigma_1(\mathbf{A} - \mathbf{B})`$. On the other hand, since $`\mathbf{w} \in \operatorname{span}(\mathbf{v}_1, \dots, \mathbf{v}_{k+1})`$,
+*Case $`i = 1`$.* $`\ker\mathbf{B}`$ has dimension $`\ge n - k`$, so it meets $`\mathrm{span}(\mathbf{v}_1, \dots, \mathbf{v}_{k+1})`$ (dimension $`k+1`$) in some unit vector $`\mathbf{w}`$. Then $`\lVert\mathbf{A}\mathbf{w}\rVert = \lVert(\mathbf{A} - \mathbf{B})\mathbf{w}\rVert \le \sigma_1(\mathbf{A} - \mathbf{B})`$. On the other hand, since $`\mathbf{w} \in \mathrm{span}(\mathbf{v}_1, \dots, \mathbf{v}_{k+1})`$,
 ```math
 \lVert\mathbf{A}\mathbf{w}\rVert^2 = \Big\lVert\sum_{i=1}^{k+1}\sigma_i\mathbf{u}_i(\mathbf{v}_i^\top\mathbf{w})\Big\rVert^2 = \sum_{i=1}^{k+1}\sigma_i^2(\mathbf{v}_i^\top\mathbf{w})^2 \ge \sigma_{k+1}^2\sum_{i=1}^{k+1}(\mathbf{v}_i^\top\mathbf{w})^2 = \sigma_{k+1}^2 .
 ```
@@ -89,7 +89,7 @@ Hence $`\sigma_{k+1}(\mathbf{A}) \le \sigma_1(\mathbf{A} - \mathbf{B})`$.
 ```math
 \sigma_i(\mathbf{A} - \mathbf{B}) = \sigma_1\big(\mathbf{A} - \mathbf{B} - (\mathbf{A}-\mathbf{B})_{i-1}\big) + \sigma_1(\mathbf{B} - \mathbf{B}_k) \ \ge\ \sigma_1\big(\mathbf{A} - (\mathbf{A}-\mathbf{B})_{i-1} - \mathbf{B}_k\big) \ \ge\ \sigma_{i+k}(\mathbf{A}),
 ```
-by the triangle inequality and then the $`i = 1`$ case, since $`\operatorname{rank}\big((\mathbf{A}-\mathbf{B})_{i-1} + \mathbf{B}_k\big) \le i + k - 1`$. (The first equality uses $`\sigma_1(\mathbf{B} - \mathbf{B}_k) = 0`$ because $`\operatorname{rank}\mathbf{B} \le k`$, and the second uses the "useful fact" from §28 with $`\mathbf{M} = \mathbf{A} - \mathbf{B}`$.) ∎
+by the triangle inequality and then the $`i = 1`$ case, since $`\mathrm{rank}\big((\mathbf{A}-\mathbf{B})_{i-1} + \mathbf{B}_k\big) \le i + k - 1`$. (The first equality uses $`\sigma_1(\mathbf{B} - \mathbf{B}_k) = 0`$ because $`\mathrm{rank}\mathbf{B} \le k`$, and the second uses the "useful fact" from §28 with $`\mathbf{M} = \mathbf{A} - \mathbf{B}`$.) ∎
 
 **Proof of Theorem 3.** $`\lVert\mathbf{A} - \mathbf{A}_k\rVert_F^2 = \sum_{i=k+1}^r\sigma_i(\mathbf{A})^2 \le \sum_{i=1}^{r-k}\sigma_i(\mathbf{A}-\mathbf{B})^2 \le \lVert\mathbf{A} - \mathbf{B}\rVert_F^2`$ by Lemma 1. ∎
 
@@ -212,7 +212,7 @@ Single = least dissimilar pair, complete = most dissimilar pair, average usually
 > **📖 Key definitions**
 > - **Idea:** if we *knew* the data were rings we'd switch to polar coordinates; spectral clustering finds such a change of coordinates implicitly (kernel PCA + k-means is a related but different route). For well-clustered data most of a point's $`k`$ nearest neighbours lie in its own cluster and get higher weights, so clusters in the data become clusters in the graph.
 > - **Similarity graph:** one node per point; connect each node to its $`k`$ nearest neighbours (undirected, so degrees may exceed $`k`$); edge weight decreasing in distance, e.g. $`w_{ij} = \exp(-\lVert\mathbf{x}_i - \mathbf{x}_j\rVert_2^2/\sigma)`$.
-> - **Weighted adjacency matrix** $`W`$ (symmetric, $`W_{ii} = 0`$); **degree matrix** $`D = \operatorname{diag}(\sum_jW_{ij})`$; **Laplacian** $`L = D - W`$. Always PSD; smallest eigenvalue 0 with eigenvector $`\mathbf{1}`$. **Normalised Laplacian** $`\widetilde L = I - D^{-1}W`$ (better for unbalanced degrees).
+> - **Weighted adjacency matrix** $`W`$ (symmetric, $`W_{ii} = 0`$); **degree matrix** $`D = \mathrm{diag}(\sum_jW_{ij})`$; **Laplacian** $`L = D - W`$. Always PSD; smallest eigenvalue 0 with eigenvector $`\mathbf{1}`$. **Normalised Laplacian** $`\widetilde L = I - D^{-1}W`$ (better for unbalanced degrees).
 > - **Cluster in a graph:** a node subset with most heavy edges inside and few leaving. **Min-cut** (partition minimising the weight of crossing edges) tends to cut off a single node; balanced/sparsest cuts are better but NP-hard. Spectral clustering is a **relaxation** of sparsest cut.
 
 **Worked example (Fig. 7a):** two unit-weight triangles $`\{1,2,3\}`$ and $`\{4,5,6\}`$ give $`D = 2I`$ and $`L`$ block-diagonal with two copies of $`\begin{bmatrix}2&-1&-1\\-1&2&-1\\-1&-1&2\end{bmatrix}`$.

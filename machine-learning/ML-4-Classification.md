@@ -28,7 +28,7 @@ Classification = supervised learning with a **categorical** output $`y \in \{1, 
 > (numerator = joint, denominator = marginal $`p(\mathbf{x}_{\text{new}})`$.)
 > - **Naïve Bayes assumption:** features are **conditionally independent given the class**: $`p(\mathbf{x}\mid y=c, \boldsymbol\theta_c) = \prod_{j=1}^D p(x_j\mid y=c, \boldsymbol\theta_{jc})`$. (Not "features are independent": they're dependent, but *only through the label*.)
 > - **Gaussian discriminant analysis (GDA):** $`p(\mathbf{x}\mid y=c) = \mathcal{N}(\mathbf{x}\mid\boldsymbol\mu_c, \boldsymbol\Sigma_c)`$. **QDA:** separate $`\boldsymbol\Sigma_c`$ per class (quadratic boundaries). **LDA:** shared $`\boldsymbol\Sigma`$ (**parameter tying**) ⇒ linear boundaries.
-> - **Softmax:** $`\operatorname{softmax}(\boldsymbol\eta)_c = \dfrac{\exp(\eta_c)}{\sum_{c'}\exp(\eta_{c'})}`$: maps any real vector to a probability distribution with its mode at the max. Invariant to adding a constant to all entries, **not** to scaling: $`\operatorname{softmax}([1,2,3]) \approx [0.09, 0.245, 0.665]`$ but $`\operatorname{softmax}([10,20,30]) \approx [2\times10^{-9}, 4\times10^{-5}, 1]`$.
+> - **Softmax:** $`\mathrm{softmax}(\boldsymbol\eta)_c = \dfrac{\exp(\eta_c)}{\sum_{c'}\exp(\eta_{c'})}`$: maps any real vector to a probability distribution with its mode at the max. Invariant to adding a constant to all entries, **not** to scaling: $`\mathrm{softmax}([1,2,3]) \approx [0.09, 0.245, 0.665]`$ but $`\mathrm{softmax}([10,20,30]) \approx [2\times10^{-9}, 4\times10^{-5}, 1]`$.
 > - **Sigmoid:** $`\sigma(t) = \dfrac{1}{1 + e^{-t}} \in (0,1)`$, monotone, $`\sigma(t) \to 0`$ as $`t \to -\infty`$ and $`\to 1`$ as $`t \to \infty`$. The 2-class softmax.
 
 Running example: predict a voter's candidate from (voted in 2012? yes/no, income, state).
@@ -85,13 +85,13 @@ p(y=c\mid\mathbf{x}) \propto \pi_c\exp\big(-\tfrac12(\mathbf{x}-\boldsymbol\mu_c
 ```
 With $`\boldsymbol\beta_c = \boldsymbol\Sigma^{-1}\boldsymbol\mu_c`$ and $`\gamma_c = -\tfrac12\boldsymbol\mu_c^\top\boldsymbol\Sigma^{-1}\boldsymbol\mu_c + \log\pi_c`$:
 > ```math
-> p(y = c\mid\mathbf{x}, \boldsymbol\theta) = \frac{\exp(\boldsymbol\beta_c^\top\mathbf{x} + \gamma_c)}{\sum_{c'}\exp(\boldsymbol\beta_{c'}^\top\mathbf{x} + \gamma_{c'})} = \operatorname{softmax}(\boldsymbol\eta)_c, \quad \boldsymbol\eta = [\boldsymbol\beta_1^\top\mathbf{x} + \gamma_1, \dots, \boldsymbol\beta_C^\top\mathbf{x} + \gamma_C].
+> p(y = c\mid\mathbf{x}, \boldsymbol\theta) = \frac{\exp(\boldsymbol\beta_c^\top\mathbf{x} + \gamma_c)}{\sum_{c'}\exp(\boldsymbol\beta_{c'}^\top\mathbf{x} + \gamma_{c'})} = \mathrm{softmax}(\boldsymbol\eta)_c, \quad \boldsymbol\eta = [\boldsymbol\beta_1^\top\mathbf{x} + \gamma_1, \dots, \boldsymbol\beta_C^\top\mathbf{x} + \gamma_C].
 > ```
 The $`\mathbf{x}^\top\boldsymbol\Sigma^{-1}\mathbf{x}`$ term cancels in the ratio, so boundaries are **linear** (Fig. 1b).
 
 **Two-class LDA ⇒ sigmoid:**
 ```math
-p(y = 1\mid\mathbf{x}) = \frac{e^{\boldsymbol\beta_1^\top\mathbf{x} + \gamma_1}}{e^{\boldsymbol\beta_1^\top\mathbf{x} + \gamma_1} + e^{\boldsymbol\beta_0^\top\mathbf{x} + \gamma_0}} = \frac{1}{1 + \exp\big(-((\boldsymbol\beta_1 - \boldsymbol\beta_0)^\top\mathbf{x} + (\gamma_1 - \gamma_0))\big)} = \operatorname{sigmoid}\big((\boldsymbol\beta_1-\boldsymbol\beta_0)^\top\mathbf{x} + (\gamma_1 - \gamma_0)\big).
+p(y = 1\mid\mathbf{x}) = \frac{e^{\boldsymbol\beta_1^\top\mathbf{x} + \gamma_1}}{e^{\boldsymbol\beta_1^\top\mathbf{x} + \gamma_1} + e^{\boldsymbol\beta_0^\top\mathbf{x} + \gamma_0}} = \frac{1}{1 + \exp\big(-((\boldsymbol\beta_1 - \boldsymbol\beta_0)^\top\mathbf{x} + (\gamma_1 - \gamma_0))\big)} = \mathrm{sigmoid}\big((\boldsymbol\beta_1-\boldsymbol\beta_0)^\top\mathbf{x} + (\gamma_1 - \gamma_0)\big).
 ```
 Same functional form as logistic regression (next), but the parameters are obtained completely differently.
 
@@ -120,7 +120,7 @@ Same functional form as logistic regression (next), but the parameters are obtai
 
 > [!NOTE]
 > **📖 Key definitions**
-> - **Logistic regression model** (binary, labels $`\{0,1\}`$, bias folded into $`\mathbf{x}`$): $`y \sim \operatorname{Bernoulli}(\sigma(\mathbf{w}\cdot\mathbf{x}))`$, i.e. $`p(y = 1\mid\mathbf{x}, \mathbf{w}) = \sigma(\mathbf{w}\cdot\mathbf{x}) = \dfrac{1}{1 + \exp(-\mathbf{w}\cdot\mathbf{x})}`$. A **discriminative** model; inputs treated as fixed.
+> - **Logistic regression model** (binary, labels $`\{0,1\}`$, bias folded into $`\mathbf{x}`$): $`y \sim \mathrm{Bernoulli}(\sigma(\mathbf{w}\cdot\mathbf{x}))`$, i.e. $`p(y = 1\mid\mathbf{x}, \mathbf{w}) = \sigma(\mathbf{w}\cdot\mathbf{x}) = \dfrac{1}{1 + \exp(-\mathbf{w}\cdot\mathbf{x})}`$. A **discriminative** model; inputs treated as fixed.
 > - **Prediction:** $`\widehat{y}_{\text{new}} = \mathbb{1}\big(\sigma(\mathbf{w}\cdot\mathbf{x}_{\text{new}}) \ge \tfrac12\big) = \mathbb{1}(\mathbf{w}\cdot\mathbf{x}_{\text{new}} \ge 0)`$: a **linear** boundary (hyperplane). Since $`\sigma(\mathbf{w}\cdot\mathbf{x})`$ depends on $`\mathbf{x}`$ only through $`\mathbf{w}\cdot\mathbf{x}`$, the contours of the predicted probability are hyperplanes parallel to the boundary (Fig. 2; the ★ points are misclassified training points).
 > - **Generalised linear model:** $`\mathbb{E}[y\mid\mathbf{x}] = f(\mathbf{w}\cdot\mathbf{x})`$ for a fixed univariate $`f`$; logistic regression has $`f = \sigma`$. GLMs capture (limited) non-linearity without basis expansion and are also used for regression; don't confuse them with "general linear models". ("Regression" in the name is historical; logistic regression is almost always used for classification.)
 > - **Cross-entropy loss** for a single point: $`-\big(y\log\mu + (1-y)\log(1-\mu)\big)`$ with $`\mu`$ = predicted probability of class 1.
@@ -128,14 +128,14 @@ Same functional form as logistic regression (next), but the parameters are obtai
 ### 17.1 Likelihood and NLL
 With $`\mu_i = \sigma(\mathbf{w}^\top\mathbf{x}_i)`$ and independent labels,
 ```math
-p(\mathbf{y}\mid\mathbf{X},\mathbf{w}) = \prod_{i=1}^N\mu_i^{y_i}(1 - \mu_i)^{1-y_i}, \qquad \operatorname{NLL}(\mathbf{y}\mid\mathbf{X},\mathbf{w}) = -\sum_{i=1}^N\big(y_i\log\mu_i + (1-y_i)\log(1-\mu_i)\big).
+p(\mathbf{y}\mid\mathbf{X},\mathbf{w}) = \prod_{i=1}^N\mu_i^{y_i}(1 - \mu_i)^{1-y_i}, \qquad \mathrm{NLL}(\mathbf{y}\mid\mathbf{X},\mathbf{w}) = -\sum_{i=1}^N\big(y_i\log\mu_i + (1-y_i)\log(1-\mu_i)\big).
 ```
 (The exponent trick picks $`\mu_i`$ when $`y_i = 1`$ and $`1-\mu_i`$ when $`y_i = 0`$.) Per point this is the **cross-entropy**. If $`y_i = 1`$ the loss is $`-\log\mu_i`$: $`\to 0`$ as $`\mu_i \to 1`$ and $`\to\infty`$ as $`\mu_i \to 0`$: a **huge penalty for being confidently wrong**.
 
 ### 17.2 Gradient, Hessian, convexity
 (Sheet 3 derives these; use $`\sigma'(t) = \sigma(t)(1-\sigma(t))`$.)
 > ```math
-> \nabla_{\mathbf{w}}\operatorname{NLL} = \sum_{i=1}^N\mathbf{x}_i(\mu_i - y_i) = \mathbf{X}^\top(\boldsymbol\mu - \mathbf{y}), \qquad \mathbf{H}_{\mathbf{w}} = \mathbf{X}^\top\mathbf{S}\mathbf{X}, \quad \mathbf{S} = \operatorname{diag}\big(\mu_i(1-\mu_i)\big).
+> \nabla_{\mathbf{w}}\mathrm{NLL} = \sum_{i=1}^N\mathbf{x}_i(\mu_i - y_i) = \mathbf{X}^\top(\boldsymbol\mu - \mathbf{y}), \qquad \mathbf{H}_{\mathbf{w}} = \mathbf{X}^\top\mathbf{S}\mathbf{X}, \quad \mathbf{S} = \mathrm{diag}\big(\mu_i(1-\mu_i)\big).
 > ```
 **Convexity proof:** for any $`\mathbf{z}`$, let $`\mathbf{z}' = \mathbf{X}\mathbf{z}`$; then $`\mathbf{z}^\top\mathbf{H}\mathbf{z} = \sum_i S_{ii}(z_i')^2 \ge 0`$ since $`S_{ii} = \mu_i(1-\mu_i) > 0`$. So $`\mathbf{H}`$ is PSD everywhere ⇒ NLL is **convex** ⇒ any convex optimiser finds the global minimum. (If $`N > D`$ and $`\mathbf{X}`$ has rank $`D`$ it's positive definite: $`\mathbf{z}^\top\mathbf{H}\mathbf{z} = 0 \Rightarrow \mathbf{X}\mathbf{z} = 0 \Rightarrow \mathbf{z} = 0`$. If $`\mathbf{X}`$ doesn't have rank $`D`$ we may be in a degenerate case: the Hessian is only PSD and the minimiser needn't be unique.)
 
@@ -151,7 +151,7 @@ With $`\mathbf{g}_t = \mathbf{X}^\top(\boldsymbol\mu_t - \mathbf{y})`$ and $`\ma
 ### 17.4 Multiclass logistic regression
 One weight vector $`\mathbf{w}_c`$ per class (columns of a $`D\times C`$ matrix $`\mathbf{W}`$):
 ```math
-p(y = c\mid\mathbf{x}, \mathbf{W}) = \frac{\exp(\mathbf{w}_c\cdot\mathbf{x})}{\sum_{c'=1}^C\exp(\mathbf{w}_{c'}\cdot\mathbf{x})} = \operatorname{softmax}\big([\mathbf{w}_1\cdot\mathbf{x}, \dots, \mathbf{w}_C\cdot\mathbf{x}]^\top\big)_c .
+p(y = c\mid\mathbf{x}, \mathbf{W}) = \frac{\exp(\mathbf{w}_c\cdot\mathbf{x})}{\sum_{c'=1}^C\exp(\mathbf{w}_{c'}\cdot\mathbf{x})} = \mathrm{softmax}\big([\mathbf{w}_1\cdot\mathbf{x}, \dots, \mathbf{w}_C\cdot\mathbf{x}]^\top\big)_c .
 ```
 Boundaries are still linear (Fig. 3). NLL is convex (Murphy 8.3.7); optimise as before.
 
@@ -304,7 +304,7 @@ g(\boldsymbol\alpha) = \mathbf{1}^\top\boldsymbol\alpha - \tfrac12(\boldsymbol\a
 If $`\mathbf{K}`$ is PSD this is **concave** ⇒ unique maximum value, solvable by convex programming (PD ⇒ unique maximiser). Otherwise KKT is no longer sufficient and you're stuck with non-linear programming (local optima, non-polynomial time).
 
 ### 20.4 Kernelised ridge regression (representer argument)
-Ridge: $`\mathcal{L}_{\text{ridge}}(\mathbf{w}) = \sum_i(\mathbf{w}\cdot\mathbf{x}_i - y_i)^2 + \lambda\lVert\mathbf{w}\rVert_2^2`$. **Claim:** the optimum has the form $`\mathbf{w} = \sum_i\alpha_i\mathbf{x}_i`$. *Proof:* write $`\mathbf{w} = \mathbf{w}_s + \mathbf{w}_\perp`$ with $`\mathbf{w}_s \in \operatorname{span}\{\mathbf{x}_i\}`$ and $`\mathbf{w}_\perp`$ orthogonal to it. Then $`\mathbf{w}_\perp\cdot\mathbf{x}_i = 0`$ so the loss term is unaffected by $`\mathbf{w}_\perp`$, while $`\lVert\mathbf{w}\rVert_2^2 = \lVert\mathbf{w}_s\rVert_2^2 + \lVert\mathbf{w}_\perp\rVert_2^2`$. Setting $`\mathbf{w}_\perp = \mathbf{0}`$ can only decrease the objective. ∎ So one can solve for $`\boldsymbol\alpha`$ instead, and everything is expressed via $`\mathbf{x}_i\cdot\mathbf{x}_j`$ ⇒ replace with any Mercer kernel (Sheet 3). Kernel methods are **not** restricted to SVMs.
+Ridge: $`\mathcal{L}_{\text{ridge}}(\mathbf{w}) = \sum_i(\mathbf{w}\cdot\mathbf{x}_i - y_i)^2 + \lambda\lVert\mathbf{w}\rVert_2^2`$. **Claim:** the optimum has the form $`\mathbf{w} = \sum_i\alpha_i\mathbf{x}_i`$. *Proof:* write $`\mathbf{w} = \mathbf{w}_s + \mathbf{w}_\perp`$ with $`\mathbf{w}_s \in \mathrm{span}\{\mathbf{x}_i\}`$ and $`\mathbf{w}_\perp`$ orthogonal to it. Then $`\mathbf{w}_\perp\cdot\mathbf{x}_i = 0`$ so the loss term is unaffected by $`\mathbf{w}_\perp`$, while $`\lVert\mathbf{w}\rVert_2^2 = \lVert\mathbf{w}_s\rVert_2^2 + \lVert\mathbf{w}_\perp\rVert_2^2`$. Setting $`\mathbf{w}_\perp = \mathbf{0}`$ can only decrease the objective. ∎ So one can solve for $`\boldsymbol\alpha`$ instead, and everything is expressed via $`\mathbf{x}_i\cdot\mathbf{x}_j`$ ⇒ replace with any Mercer kernel (Sheet 3). Kernel methods are **not** restricted to SVMs.
 
 > [!TIP]
 > **✅ Key takeaways**

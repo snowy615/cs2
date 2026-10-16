@@ -17,11 +17,11 @@
 
 > [!NOTE]
 > **📖 Key definitions**
-> - **Artificial neuron / unit:** output $`f(b + w_1x_1 + \dots + w_Dx_D)`$: a **linear function** of the inputs followed by a non-linear **activation function** $`f`$. Perceptron: $`f = \operatorname{sign}`$. Logistic regression: $`f = \sigma`$ (a single-unit network).
+> - **Artificial neuron / unit:** output $`f(b + w_1x_1 + \dots + w_Dx_D)`$: a **linear function** of the inputs followed by a non-linear **activation function** $`f`$. Perceptron: $`f = \mathrm{sign}`$. Logistic regression: $`f = \sigma`$ (a single-unit network).
 > - **Multilayer perceptron (MLP):** units arranged in **layers**. Layer 1 = **input** $`\mathbf{x}`$; last layer $`L`$ = **output**; the rest are **hidden** (not observed in the data). **Fully connected:** every unit in layer $`l-1`$ feeds every unit in layer $`l`$.
 > - **Notation:** $`w^l_{ij}`$ = weight from unit $`j`$ of layer $`l-1`$ to unit $`i`$ of layer $`l`$ (superscripts are **layer indices, not powers**); matrix $`\mathbf{W}^l`$ of size $`n_l\times n_{l-1}`$; bias vector $`\mathbf{b}^l`$.
 > - **Pre-activation** $`\mathbf{z}^l = \mathbf{W}^l\mathbf{a}^{l-1} + \mathbf{b}^l`$; **activation** $`\mathbf{a}^l = f_l(\mathbf{z}^l)`$ (usually unit-wise, $`a^l_i = f_l(z^l_i)`$; softmax acts on the whole layer).
-> - **Softmax (layer-wise activation, usually only at the output):** $`\operatorname{softmax}(\mathbf{z})_i = e^{z_i}/\sum_je^{z_j}`$; its Jacobian $`\partial\mathbf{a}^L/\partial\mathbf{z}^L`$ is a full $`n_L\times n_L`$ matrix.
+> - **Softmax (layer-wise activation, usually only at the output):** $`\mathrm{softmax}(\mathbf{z})_i = e^{z_i}/\sum_je^{z_j}`$; its Jacobian $`\partial\mathbf{a}^L/\partial\mathbf{z}^L`$ is a full $`n_L\times n_L`$ matrix.
 > - **Common activations:** sigmoid $`\sigma(z) = 1/(1+e^{-z})`$, $`\sigma' = \sigma(1-\sigma) \le \tfrac14`$; $`\tanh`$, $`\tanh' = 1 - \tanh^2`$; **ReLU** $`f(z) = \max(0, z)`$, derivative 1 for $`z > 0`$, 0 otherwise.
 > - **Cross-entropy loss** (binary, $`\widehat{y}`$ = predicted probability): $`\ell = -\big(y\log\widehat{y} + (1-y)\log(1-\widehat{y})\big)`$. $`C`$ classes with softmax output: $`\ell = -\sum_c\mathbb{1}(y = c)\log a^L_c`$. Regression: squared error $`(a^L - y)^2`$.
 
@@ -60,7 +60,7 @@ So everything reduces to the $`\partial\ell/\partial\mathbf{z}^l`$, computed **b
 ```math
 \frac{\partial\ell}{\partial\mathbf{z}^3} = \frac{\partial\ell}{\partial\mathbf{a}^3}\frac{\partial\mathbf{a}^3}{\partial\mathbf{z}^3} = [a^3_1 - y] \qquad (\text{the sigmoid's derivative cancels the denominator: "prediction minus target"}).
 ```
-3. $`\mathbf{z}^3 = \mathbf{W}^3\mathbf{a}^2 + \mathbf{b}^3`$ so $`\dfrac{\partial\mathbf{z}^3}{\partial\mathbf{a}^2} = \mathbf{W}^3`$; and $`a^2_i = \tanh(z^2_i)`$ so $`\dfrac{\partial\mathbf{a}^2}{\partial\mathbf{z}^2} = \operatorname{diag}\big(1 - (a^2_1)^2,\ 1 - (a^2_2)^2\big)`$. Therefore
+3. $`\mathbf{z}^3 = \mathbf{W}^3\mathbf{a}^2 + \mathbf{b}^3`$ so $`\dfrac{\partial\mathbf{z}^3}{\partial\mathbf{a}^2} = \mathbf{W}^3`$; and $`a^2_i = \tanh(z^2_i)`$ so $`\dfrac{\partial\mathbf{a}^2}{\partial\mathbf{z}^2} = \mathrm{diag}\big(1 - (a^2_1)^2,\ 1 - (a^2_2)^2\big)`$. Therefore
 ```math
 \frac{\partial\ell}{\partial\mathbf{z}^2} = \frac{\partial\ell}{\partial\mathbf{z}^3}\frac{\partial\mathbf{z}^3}{\partial\mathbf{a}^2}\frac{\partial\mathbf{a}^2}{\partial\mathbf{z}^2} = [a^3_1 - y]\,\mathbf{W}^3\begin{bmatrix}1 - (a^2_1)^2 & 0\\ 0 & 1 - (a^2_2)^2\end{bmatrix}.
 ```
@@ -173,12 +173,12 @@ Same structure as the fully-connected case, except the weight gradient **sums ov
 
 **Why model $`p(\mathbf{w})`$ at all?** Bayes: to map input $`\mathbf{x}`$ to utterance $`\mathbf{w}`$, use $`p(\mathbf{w})p(\mathbf{x}\mid\mathbf{w})`$; monolingual text for $`p(\mathbf{w})`$ is far more plentiful than paired data for $`p(\mathbf{w}\mid\mathbf{x})`$. Many tasks reduce to continuation: MT, QA, dialogue ($`p_{\text{LM}}(\text{What do dogs love?} \mid\mid\mid \text{bones} \mid \beta)`$). With enough context, "There she built a" → *sandcastle* needs resolving *she* = Alice and *beach*: **long-range dependencies** (Turing and Good estimated word frequencies to crack Enigma).
 
-**Count-based n-grams** (MLE: $`p(w_n\mid\text{history}) = \#(\text{history}, w_n)/\#(\text{history})`$; unigram ignores context, bigram uses the previous word, trigram the previous two) fail because most contexts are never seen (zero probabilities). **Neural n-gram** (trigram, Fig. 2b): inputs are one-hot vectors of the previous two words, $`\mathbf{h}_n = g(V[\mathbf{w}_{n-1}; \mathbf{w}_{n-2}] + c)`$, $`\widehat{\mathbf{p}}_n = \operatorname{softmax}(W\mathbf{h}_n + b)`$ over a vocabulary of size $`> 10^5`$. Trained by SGD + backprop on i.i.d. (context, next word) pairs, objective
+**Count-based n-grams** (MLE: $`p(w_n\mid\text{history}) = \#(\text{history}, w_n)/\#(\text{history})`$; unigram ignores context, bigram uses the previous word, trigram the previous two) fail because most contexts are never seen (zero probabilities). **Neural n-gram** (trigram, Fig. 2b): inputs are one-hot vectors of the previous two words, $`\mathbf{h}_n = g(V[\mathbf{w}_{n-1}; \mathbf{w}_{n-2}] + c)`$, $`\widehat{\mathbf{p}}_n = \mathrm{softmax}(W\mathbf{h}_n + b)`$ over a vocabulary of size $`> 10^5`$. Trained by SGD + backprop on i.i.d. (context, next word) pairs, objective
 ```math
-\mathcal{F} = -\frac1N\sum_n\operatorname{cost}_n(\mathbf{w}_n, \widehat{\mathbf{p}}_n), \qquad \operatorname{cost}(\mathbf{a}, \mathbf{b}) = \mathbf{a}^\top\log\mathbf{b} \ (\text{log-prob of the true word}),
+\mathcal{F} = -\frac1N\sum_n\mathrm{cost}_n(\mathbf{w}_n, \widehat{\mathbf{p}}_n), \qquad \mathrm{cost}(\mathbf{a}, \mathbf{b}) = \mathbf{a}^\top\log\mathbf{b} \ (\text{log-prob of the true word}),
 ```
 ```math
-\frac{\partial\mathcal{F}}{\partial W} = -\frac1N\sum_n\frac{\partial\operatorname{cost}_n}{\partial\widehat{\mathbf{p}}_n}\frac{\partial\widehat{\mathbf{p}}_n}{\partial W}, \qquad \frac{\partial\mathcal{F}}{\partial V} = -\frac1N\sum_n\frac{\partial\operatorname{cost}_n}{\partial\widehat{\mathbf{p}}_n}\frac{\partial\widehat{\mathbf{p}}_n}{\partial\mathbf{h}_n}\frac{\partial\mathbf{h}_n}{\partial V}.
+\frac{\partial\mathcal{F}}{\partial W} = -\frac1N\sum_n\frac{\partial\mathrm{cost}_n}{\partial\widehat{\mathbf{p}}_n}\frac{\partial\widehat{\mathbf{p}}_n}{\partial W}, \qquad \frac{\partial\mathcal{F}}{\partial V} = -\frac1N\sum_n\frac{\partial\mathrm{cost}_n}{\partial\widehat{\mathbf{p}}_n}\frac{\partial\widehat{\mathbf{p}}_n}{\partial\mathbf{h}_n}\frac{\partial\mathbf{h}_n}{\partial V}.
 ```
 Each time step's gradient is independent ⇒ trivially parallel on GPUs. **Sampling:** feed $`n-1`$ start symbols `<s>`, sample a word, feed it back, repeat until `</s>` (the training text must contain these start/end symbols so the model learns to begin and finish utterances) (sample from a discrete distribution via a uniform $`z`$ and the cumulative probabilities).
 
@@ -189,9 +189,9 @@ Each time step's gradient is independent ⇒ trivially parallel on GPUs. **Sampl
 The unrolled RNN is a DAG, so ordinary backprop applies. BPTT costs linear in the longest sequence and a minibatch is an $`m\times N\times\lvert\mathbf{x}_i\rvert`$ tensor ($`N`$ = longest sequence) padded with a special symbol, wasting memory; TBPTT is constant in the truncation length, batches cleanly, and though approximate works well for *medium*-range dependencies.
 
 ### 26.1 Exploding and vanishing gradients in RNNs
-Write $`\mathbf{h}_n = g(\mathbf{z}_n)`$ with $`\mathbf{z}_n = V_x\mathbf{x}_n + V_h\mathbf{h}_{n-1} + c`$. Then $`\dfrac{\partial\mathbf{h}_n}{\partial\mathbf{z}_n} = \operatorname{diag}(g'(\mathbf{z}_n))`$ and $`\dfrac{\partial\mathbf{z}_n}{\partial\mathbf{h}_{n-1}} = V_h`$, so
+Write $`\mathbf{h}_n = g(\mathbf{z}_n)`$ with $`\mathbf{z}_n = V_x\mathbf{x}_n + V_h\mathbf{h}_{n-1} + c`$. Then $`\dfrac{\partial\mathbf{h}_n}{\partial\mathbf{z}_n} = \mathrm{diag}(g'(\mathbf{z}_n))`$ and $`\dfrac{\partial\mathbf{z}_n}{\partial\mathbf{h}_{n-1}} = V_h`$, so
 ```math
-\frac{\partial\text{cost}_N}{\partial\mathbf{h}_1} = \frac{\partial\text{cost}_N}{\partial\widehat{\mathbf{p}}_N}\frac{\partial\widehat{\mathbf{p}}_N}{\partial\mathbf{h}_N}\prod_{n\in\{N,\dots,2\}}\operatorname{diag}\big(g'(\mathbf{z}_n)\big)\,V_h .
+\frac{\partial\text{cost}_N}{\partial\mathbf{h}_1} = \frac{\partial\text{cost}_N}{\partial\widehat{\mathbf{p}}_N}\frac{\partial\widehat{\mathbf{p}}_N}{\partial\mathbf{h}_N}\prod_{n\in\{N,\dots,2\}}\mathrm{diag}\big(g'(\mathbf{z}_n)\big)\,V_h .
 ```
 The core is the **repeated multiplication by the same matrix $`V_h`$**. Raising a matrix to a power: largest eigenvalue $`= 1`$ ⇒ gradient propagates; $`> 1`$ ⇒ **explodes**; $`< 1`$ ⇒ **vanishes**. Usually the spectral radius is small, the gradient vanishes, and long-range dependencies aren't learned (the non-linearities $`g'`$ shrink it further). Remedies: second-order methods (don't scale), careful (orthogonal) initialisation of $`V_h`$, and above all **gated units** (LSTMs; beyond this course).
 

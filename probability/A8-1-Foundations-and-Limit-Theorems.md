@@ -61,15 +61,15 @@ when the sum/integral converges. For a function $`g`$:
 
 **Variance and covariance:**
 ```math
-\operatorname{var}(X) = \mathbb{E}\big[(X - \mathbb{E}X)^2\big] = \mathbb{E}(X^2) - (\mathbb{E}X)^2,
+\mathrm{var}(X) = \mathbb{E}\big[(X - \mathbb{E}X)^2\big] = \mathbb{E}(X^2) - (\mathbb{E}X)^2,
 ```
 ```math
-\operatorname{cov}(X,Y) = \mathbb{E}\big[(X-\mathbb{E}X)(Y-\mathbb{E}Y)\big] = \mathbb{E}(XY) - \mathbb{E}X\,\mathbb{E}Y .
+\mathrm{cov}(X,Y) = \mathbb{E}\big[(X-\mathbb{E}X)(Y-\mathbb{E}Y)\big] = \mathbb{E}(XY) - \mathbb{E}X\,\mathbb{E}Y .
 ```
-- $`\operatorname{var}(X) = \operatorname{cov}(X,X)`$; bilinearity: $`\operatorname{cov}(aX+b, cY+d) = ac\,\operatorname{cov}(X,Y)`$; so $`\operatorname{var}(aX+b) = a^2\operatorname{var}(X)`$.
+- $`\mathrm{var}(X) = \mathrm{cov}(X,X)`$; bilinearity: $`\mathrm{cov}(aX+b, cY+d) = ac\,\mathrm{cov}(X,Y)`$; so $`\mathrm{var}(aX+b) = a^2\mathrm{var}(X)`$.
 - Sums:
 ```math
-\operatorname{var}(X_1 + \dots + X_n) = \sum_{i=1}^n \operatorname{var}(X_i) + 2\sum_{1 \le i < j \le n}\operatorname{cov}(X_i, X_j).
+\mathrm{var}(X_1 + \dots + X_n) = \sum_{i=1}^n \mathrm{var}(X_i) + 2\sum_{1 \le i < j \le n}\mathrm{cov}(X_i, X_j).
 ```
 
 ### 1.4 Independence
@@ -79,7 +79,7 @@ when the sum/integral converges. For a function $`g`$:
 \mathbb{P}(X_1 \le x_1, \dots, X_n \le x_n) = F_{X_1}(x_1)\cdots F_{X_n}(x_n) \quad \forall x_1,\dots,x_n ,
 ```
 or, for discrete random variables, $`\mathbb{P}(X_1 = x_1, \dots, X_n = x_n) = \prod_i \mathbb{P}(X_i = x_i)`$.
-- If $`X, Y`$ are independent (with finite means) then $`\mathbb{E}(XY) = \mathbb{E}X\,\mathbb{E}Y`$, i.e. $`\operatorname{cov}(X,Y) = 0`$ (**uncorrelated**). The converse is **false**.
+- If $`X, Y`$ are independent (with finite means) then $`\mathbb{E}(XY) = \mathbb{E}X\,\mathbb{E}Y`$, i.e. $`\mathrm{cov}(X,Y) = 0`$ (**uncorrelated**). The converse is **false**.
 - Slogan: **"independence means multiply"** (probabilities, expectations of products, generating functions, densities).
 
 ### 1.5 Standard distributions (summary; full table in the [formula sheet](A8-4-Formula-Sheet.md))
@@ -108,8 +108,8 @@ $`\Gamma(r) = \int_0^\infty z^{r-1}e^{-z}\,dz`$, with $`\Gamma(r) = (r-1)!`$ for
 > - ❌ "$`X \overset{d}{=} Y`$ means $`X = Y`$." ✅ Same *distribution*, possibly different values (red die vs blue die).
 > - ❌ "Uncorrelated ⇒ independent." ✅ Not in general. It does hold for **jointly normal** variables (§4.3 in Part 2); each being normal on its own isn't enough.
 > - ❌ "Pairwise independent ⇒ independent."
-> - ❌ "$`\operatorname{var}(X+Y) = \operatorname{var}X + \operatorname{var}Y`$ always." ✅ Only when $`\operatorname{cov}(X,Y) = 0`$.
-> - ❌ "$`\operatorname{var}(aX+b) = a\operatorname{var}X + b`$." ✅ $`a^2\operatorname{var}X`$.
+> - ❌ "$`\mathrm{var}(X+Y) = \mathrm{var}\,X + \mathrm{var}\,Y`$ always." ✅ Only when $`\mathrm{cov}(X,Y) = 0`$.
+> - ❌ "$`\mathrm{var}(aX+b) = a\mathrm{var}\,X + b`$." ✅ $`a^2\mathrm{var}\,X`$.
 > - ❌ "A density value $`f(x)`$ is a probability (so $`\le 1`$)." ✅ It's a density; $`\mathbb{P}(X = x) = 0`$ for continuous $`X`$, and $`f`$ can exceed 1.
 > - ❌ Mixing up geometric conventions (support $`\{1,2,\dots\}`$ vs $`\{0,1,\dots\}`$). State which one you use.
 
@@ -210,7 +210,7 @@ So $`\mathbb{P}(B_N) = 0`$, hence (Lemma 2.5) $`\mathbb{P}(\bigcup_N B_N) = 0`$,
 
 **Chebyshev's inequality.** If $`Y`$ has finite mean and variance, then for any $`\epsilon > 0`$:
 ```math
-\mathbb{P}\big(\lvert Y - \mathbb{E}Y\rvert \ge \epsilon\big) \le \frac{\operatorname{var}(Y)}{\epsilon^2}.
+\mathbb{P}\big(\lvert Y - \mathbb{E}Y\rvert \ge \epsilon\big) \le \frac{\mathrm{var}(Y)}{\epsilon^2}.
 ```
 *Proof.* $`\mathbb{P}(\lvert Y - \mathbb{E}Y\rvert \ge \epsilon) = \mathbb{P}\big((Y-\mathbb{E}Y)^2 \ge \epsilon^2\big) \le \mathbb{E}\big[(Y-\mathbb{E}Y)^2\big]/\epsilon^2`$, by Markov with $`X = (Y-\mathbb{E}Y)^2`$ and $`z = \epsilon^2`$. ∎
 
@@ -222,11 +222,11 @@ So $`\mathbb{P}(B_N) = 0`$, hence (Lemma 2.5) $`\mathbb{P}(\bigcup_N B_N) = 0`$,
 
 *Proof (assuming finite variance $`\sigma^2`$).* $`\mathbb{E}(S_n/n) = \mu`$ and, by independence,
 ```math
-\operatorname{var}\Big(\frac{S_n}{n}\Big) = \frac{\operatorname{var}X_1 + \dots + \operatorname{var}X_n}{n^2} = \frac{n\sigma^2}{n^2} = \frac{\sigma^2}{n}.
+\mathrm{var}\Big(\frac{S_n}{n}\Big) = \frac{\mathrm{var}\,X_1 + \dots + \mathrm{var}\,X_n}{n^2} = \frac{n\sigma^2}{n^2} = \frac{\sigma^2}{n}.
 ```
 Chebyshev: $`\mathbb{P}(\lvert S_n/n - \mu\rvert \ge \epsilon) \le \sigma^2/(n\epsilon^2) \to 0`$. ∎ *(An alternative proof via mgfs is in §3.2.2 of [Part 2](A8-2-Generating-Functions-and-Joint-Densities.md). It assumes the mgf is finite near 0, which is **stronger** than finite variance. The finite-mean-only case is stated in the notes but not proved.)*
 
-**Remark.** The same proof works much more generally: identical distributions are never used, and independence can be dropped as long as $`\operatorname{var}(S_n)`$ grows slower than $`n^2`$. E.g. with bounded variances and $`\sum_{i<j}\operatorname{cov}(X_i,X_j) = o(n^2)`$, we get $`(S_n - \mathbb{E}S_n)/n \xrightarrow{P} 0`$.
+**Remark.** The same proof works much more generally: identical distributions are never used, and independence can be dropped as long as $`\mathrm{var}(S_n)`$ grows slower than $`n^2`$. E.g. with bounded variances and $`\sum_{i<j}\mathrm{cov}(X_i,X_j) = o(n^2)`$, we get $`(S_n - \mathbb{E}S_n)/n \xrightarrow{P} 0`$.
 
 ### 2.5 Strong law of large numbers
 
@@ -235,7 +235,7 @@ Chebyshev: $`\mathbb{P}(\lvert S_n/n - \mu\rvert \ge \epsilon) \le \sigma^2/(n\e
 > \frac{S_n}{n} \to \mu \quad \text{almost surely}.
 > ```
 
-**Proof assuming $`\mathbb{E}X_n^4 < \infty`$** *(non-examinable, but a nice technique)*. Centre: $`W_n = X_n - \mu`$, so $`\mathbb{E}W_n = 0`$ and $`\mathbb{E}W_n^4 < \infty`$ (exercise: $`\mathbb{E}X^4 < \infty \Rightarrow \mathbb{E}W^4 < \infty`$), and $`(\mathbb{E}W_n^2)^2 = \mathbb{E}W_n^4 - \operatorname{var}(W_n^2) \le \mathbb{E}W_n^4`$. Expand $`\mathbb{E}[(S_n - n\mu)^4] = \mathbb{E}[(W_1 + \dots + W_n)^4]`$:
+**Proof assuming $`\mathbb{E}X_n^4 < \infty`$** *(non-examinable, but a nice technique)*. Centre: $`W_n = X_n - \mu`$, so $`\mathbb{E}W_n = 0`$ and $`\mathbb{E}W_n^4 < \infty`$ (exercise: $`\mathbb{E}X^4 < \infty \Rightarrow \mathbb{E}W^4 < \infty`$), and $`(\mathbb{E}W_n^2)^2 = \mathbb{E}W_n^4 - \mathrm{var}(W_n^2) \le \mathbb{E}W_n^4`$. Expand $`\mathbb{E}[(S_n - n\mu)^4] = \mathbb{E}[(W_1 + \dots + W_n)^4]`$:
 ```math
 \sum_{i}\mathbb{E}W_i^4 + 4\sum_{i \ne j}\mathbb{E}W_i^3W_j + 3\sum_{i \ne j}\mathbb{E}W_i^2W_j^2 + 6\!\!\sum_{i,j,k \text{ distinct}}\!\!\mathbb{E}W_i^2W_jW_k + \!\!\sum_{i,j,k,l \text{ distinct}}\!\!\mathbb{E}W_iW_jW_kW_l
 ```

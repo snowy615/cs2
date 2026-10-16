@@ -11,20 +11,20 @@
 | Model | Prediction | Objective (minimise) | Solution |
 |---|---|---|---|
 | Linear regression (least squares) | $`\widehat{y} = \mathbf{w}\cdot\mathbf{x}`$ | $`\frac{1}{2N}(\mathbf{X}\mathbf{w}-\mathbf{y})^\top(\mathbf{X}\mathbf{w}-\mathbf{y})`$ | $`\mathbf{w} = (\mathbf{X}^\top\mathbf{X})^{-1}\mathbf{X}^\top\mathbf{y}`$ |
-| 1-D least squares | $`w_0 + w_1x`$ | same | $`w_1 = \widehat{\operatorname{cov}}(x,y)/\widehat{\operatorname{var}}(x)`$, $`w_0 = \bar y - w_1\bar x`$ |
+| 1-D least squares | $`w_0 + w_1x`$ | same | $`w_1 = \widehat{\mathrm{cov}}(x,y)/\widehat{\mathrm{var}}(x)`$, $`w_0 = \bar y - w_1\bar x`$ |
 | Gaussian-noise MLE | same | NLL $`= \frac{1}{2\sigma^2}\text{RSS} + \frac N2\log(2\pi\sigma^2)`$ | $`\mathbf{w}_{\text{ML}} = \mathbf{w}_{\text{LS}}`$, $`\sigma^2_{\text{ML}} = \text{RSS}/N`$ |
 | Laplace-noise MLE | same | $`\frac1b\sum_i\lvert y_i - \mathbf{w}^\top\mathbf{x}_i\rvert + N\log 2b`$ | absolute loss; LP / subgradient; $`b_{\text{ML}} = \frac1N\sum_i\lvert y_i - \mathbf{w}^\top\mathbf{x}_i\rvert`$ |
 | Ridge | same | $`\text{RSS} + \lambda\lVert\mathbf{w}\rVert_2^2`$ | $`\mathbf{w} = (\mathbf{X}^\top\mathbf{X} + \lambda\mathbf{I})^{-1}\mathbf{X}^\top\mathbf{y}`$ |
 | Lasso | same | $`\text{RSS} + \lambda\lVert\mathbf{w}\rVert_1`$ | no closed form; sparse |
 | Bayesian linear regression | $`\mathbf{w}_N^\top\mathbf{x}`$ | prior $`\mathcal{N}(\mathbf{0},\boldsymbol\Lambda)`$ | $`\boldsymbol\Sigma_N = (\boldsymbol\Lambda^{-1} + \sigma^{-2}\mathbf{X}^\top\mathbf{X})^{-1}`$, $`\mathbf{w}_N = \sigma^{-2}\boldsymbol\Sigma_N\mathbf{X}^\top\mathbf{y}`$, pred. var $`\sigma^2 + \mathbf{x}^\top\boldsymbol\Sigma_N\mathbf{x}`$ |
-| MAP | | $`-\log p(\mathcal{D}\mid\mathbf{w}) - \log p(\mathbf{w})`$ $`\propto \text{RSS} + 2\sigma^2\mathcal{R}(\mathbf{w})`$ | prior $`\mathcal{N}(\mathbf{0}, (\sigma^2/\lambda)\mathbf{I})`$ ⇒ ridge; $`\prod_i\operatorname{Lap}(0, 2\sigma^2/\lambda)`$ ⇒ lasso; flat ⇒ MLE |
+| MAP | | $`-\log p(\mathcal{D}\mid\mathbf{w}) - \log p(\mathbf{w})`$ $`\propto \text{RSS} + 2\sigma^2\mathcal{R}(\mathbf{w})`$ | prior $`\mathcal{N}(\mathbf{0}, (\sigma^2/\lambda)\mathbf{I})`$ ⇒ ridge; $`\prod_i\mathrm{Lap}(0, 2\sigma^2/\lambda)`$ ⇒ lasso; flat ⇒ MLE |
 | Gaussian mean, known $`\sigma^2`$ (conjugate) | | prior $`\mathcal{N}(\mu_0, \sigma_0^2)`$ | $`\mu_N = \frac{(\sigma^2/\sigma_0^2)\mu_0 + \sum_it_i}{\sigma^2/\sigma_0^2 + N}`$, $`\sigma_N^2 = (1/\sigma_0^2 + N/\sigma^2)^{-1}`$, predictive var $`\sigma^2 + \sigma_N^2`$ |
 | Generative classifier | $`\arg\max_c\pi_c\,p(\mathbf{x}\mid c)`$ | log-lik $`\sum_cN_c\log\pi_c + \sum_i\log p(\mathbf{x}_i\mid y_i)`$ | $`\pi_c = N_c/N`$ |
 | Naïve Bayes | same with $`p(\mathbf{x}\mid c) = \prod_jp(x_j\mid c)`$ | per-feature 1-D MLEs | params linear in $`D`$ ($`O(CD)`$ binary, $`O(CDK)`$ categorical) |
 | QDA / LDA | Gaussian class-conditionals | $`\widehat{\boldsymbol\mu}_c`$ = class mean, $`\widehat{\boldsymbol\Sigma}_c`$ = class covariance | quadratic / linear boundaries; LDA ⇒ softmax |
 | Logistic regression | $`p(y=1\mid\mathbf{x}) = \sigma(\mathbf{w}\cdot\mathbf{x})`$ | NLL $`= -\sum_i\big(y_i\log\mu_i + (1-y_i)\log(1-\mu_i)\big)`$ | gradient $`\mathbf{X}^\top(\boldsymbol\mu-\mathbf{y})`$, Hessian $`\mathbf{X}^\top\mathbf{S}\mathbf{X}`$; Newton = IRLS |
-| Multiclass logistic | $`\operatorname{softmax}([\mathbf{w}_c\cdot\mathbf{x}]_c)`$ | convex NLL | gradient methods |
-| SVM (primal) | $`\operatorname{sign}(\mathbf{w}\cdot\mathbf{x} + w_0)`$ | $`\frac12\lVert\mathbf{w}\rVert^2 + C\sum_i\zeta_i`$ s.t. $`y_i(\mathbf{w}\cdot\mathbf{x}_i+w_0) \ge 1-\zeta_i`$, $`\zeta_i\ge0`$ | QP; $`=\frac12\lVert\mathbf{w}\rVert^2 + C\sum_i\text{hinge}_i`$ |
+| Multiclass logistic | $`\mathrm{softmax}([\mathbf{w}_c\cdot\mathbf{x}]_c)`$ | convex NLL | gradient methods |
+| SVM (primal) | $`\mathrm{sign}(\mathbf{w}\cdot\mathbf{x} + w_0)`$ | $`\frac12\lVert\mathbf{w}\rVert^2 + C\sum_i\zeta_i`$ s.t. $`y_i(\mathbf{w}\cdot\mathbf{x}_i+w_0) \ge 1-\zeta_i`$, $`\zeta_i\ge0`$ | QP; $`=\frac12\lVert\mathbf{w}\rVert^2 + C\sum_i\text{hinge}_i`$ |
 | SVM (dual) | $`\sum_i\alpha_iy_i\kappa(\mathbf{x}_i,\mathbf{x}) + w_0`$ | max $`\sum_i\alpha_i - \frac12\sum_{ij}\alpha_i\alpha_jy_iy_j\kappa(\mathbf{x}_i,\mathbf{x}_j)`$ s.t. $`\sum_i\alpha_iy_i = 0`$, $`0\le\alpha_i\le C`$ | $`\mathbf{w} = \sum_i\alpha_iy_i\mathbf{x}_i`$; $`\alpha_i > 0`$ ⇔ support vector |
 | Neural net | $`\mathbf{a}^L`$ after FE1–FE2 | cross-entropy / squared error | backprop + SGD |
 | k-means | nearest mean | $`\sum_j\sum_{i\in C_j}\lVert\mathbf{x}_i - \boldsymbol\mu_j\rVert^2`$ | Lloyd's (local opt.) |
@@ -32,9 +32,9 @@
 
 ## 2. Distributions you must know
 ```math
-\mathcal{N}(x\mid\mu,\sigma^2) = \frac{1}{\sqrt{2\pi}\sigma}e^{-(x-\mu)^2/2\sigma^2}, \qquad \mathcal{N}(\mathbf{x}\mid\boldsymbol\mu,\boldsymbol\Sigma) = \frac{1}{(2\pi)^{D/2}\lvert\boldsymbol\Sigma\rvert^{1/2}}e^{-\frac12(\mathbf{x}-\boldsymbol\mu)^\top\boldsymbol\Sigma^{-1}(\mathbf{x}-\boldsymbol\mu)}, \qquad \operatorname{Bernoulli}(y\mid\theta) = \theta^y(1-\theta)^{1-y}
+\mathcal{N}(x\mid\mu,\sigma^2) = \frac{1}{\sqrt{2\pi}\sigma}e^{-(x-\mu)^2/2\sigma^2}, \qquad \mathcal{N}(\mathbf{x}\mid\boldsymbol\mu,\boldsymbol\Sigma) = \frac{1}{(2\pi)^{D/2}\lvert\boldsymbol\Sigma\rvert^{1/2}}e^{-\frac12(\mathbf{x}-\boldsymbol\mu)^\top\boldsymbol\Sigma^{-1}(\mathbf{x}-\boldsymbol\mu)}, \qquad \mathrm{Bernoulli}(y\mid\theta) = \theta^y(1-\theta)^{1-y}
 ```
-Also seen: Laplace $`\frac{1}{2b}e^{-\lvert x-\mu\rvert/b}`$ (variance $`2b^2`$); multinoulli $`p(x = l) = \mu_l`$. Empirical statistics: $`\widehat{\operatorname{var}}(x) = \frac1N\sum_ix_i^2 - \bar x^2`$, $`\widehat{\operatorname{cov}}(x,y) = \frac1N\sum_ix_iy_i - \bar x\bar y`$.
+Also seen: Laplace $`\frac{1}{2b}e^{-\lvert x-\mu\rvert/b}`$ (variance $`2b^2`$); multinoulli $`p(x = l) = \mu_l`$. Empirical statistics: $`\widehat{\mathrm{var}}(x) = \frac1N\sum_ix_i^2 - \bar x^2`$, $`\widehat{\mathrm{cov}}(x,y) = \frac1N\sum_ix_iy_i - \bar x\bar y`$.
 
 ## 3. Calculus toolkit
 | Rule | Formula |
@@ -44,7 +44,7 @@ Also seen: Laplace $`\frac{1}{2b}e^{-\lvert x-\mu\rvert/b}`$ (variance $`2b^2`$)
 | Sigmoid | $`\sigma(t) = \frac{1}{1+e^{-t}}`$, $`\sigma' = \sigma(1-\sigma) \le \frac14`$, $`1 - \sigma(t) = \sigma(-t)`$ |
 | tanh | $`\tanh' = 1 - \tanh^2`$ |
 | ReLU | $`\max(0,z)`$; derivative $`\mathbb{1}(z>0)`$; subgradient at 0 is $`[0,1]`$ |
-| Softmax | $`\operatorname{softmax}(\mathbf{z})_c = e^{z_c}/\sum_{c'}e^{z_{c'}}`$; shift-invariant, not scale-invariant |
+| Softmax | $`\mathrm{softmax}(\mathbf{z})_c = e^{z_c}/\sum_{c'}e^{z_{c'}}`$; shift-invariant, not scale-invariant |
 | Cross-entropy + sigmoid/softmax output | $`\partial\ell/\partial\mathbf{z}^L = \mathbf{a}^L - \mathbf{y}`$ |
 | Chain rule (Jacobians) | $`\frac{\partial h}{\partial\mathbf{x}} = \frac{\partial h}{\partial\mathbf{z}}\frac{\partial\mathbf{z}}{\partial\mathbf{x}}`$ (row-vector convention for scalars) |
 | Subgradient | $`\mathbf{g}`$ with $`f(\mathbf{w}) \ge f(\mathbf{w}_0) + \mathbf{g}^\top(\mathbf{w}-\mathbf{w}_0)`$; $`\partial\lvert w\rvert`$ at 0 is $`[-1,1]`$ |

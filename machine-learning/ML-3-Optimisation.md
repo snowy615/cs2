@@ -67,7 +67,7 @@ a contradiction. ∎
 ### 10.4 Standard classes of convex programs
 - **Linear program (LP):** minimise $`\mathbf{c}^\top\mathbf{x} + d`$ subject to $`\mathbf{A}\mathbf{x} \le \mathbf{e}`$, $`\mathbf{B}\mathbf{x} = \mathbf{f}`$ (component-wise). No closed form, but polynomial-time algorithms and solvers that handle tens of thousands of variables. If an optimum exists, one is at a **vertex** of the feasible polytope (Fig. 1: the objective direction $`\mathbf{c}`$ and the optimal vertex; in degenerate cases a whole face is optimal). Equality constraints are redundant in principle ($`\mathbf{B}\mathbf{x} = \mathbf{f}`$ ⇔ $`\mathbf{B}\mathbf{x} \le \mathbf{f}`$ and $`-\mathbf{B}\mathbf{x} \le -\mathbf{f}`$), but how a solver handles equalities and non-negativity can change running time a lot.
 - **Quadratically constrained quadratic program (QCQP):** quadratic objective and constraints (generalises LP). SVMs are quadratic programs (Part 4).
-- **Semidefinite program (SDP):** minimise $`\operatorname{tr}(\mathbf{C}\mathbf{X})`$ subject to $`\operatorname{tr}(\mathbf{A}_i\mathbf{X}) = b_i`$, $`\mathbf{X}`$ PSD ($`\mathbf{C}, \mathbf{A}_i`$ symmetric). (Generalises QCQP; just be aware it exists.)
+- **Semidefinite program (SDP):** minimise $`\mathrm{tr}(\mathbf{C}\mathbf{X})`$ subject to $`\mathrm{tr}(\mathbf{A}_i\mathbf{X}) = b_i`$, $`\mathbf{X}`$ PSD ($`\mathbf{C}, \mathbf{A}_i`$ symmetric). (Generalises QCQP; just be aware it exists.)
 
 ---
 

@@ -46,15 +46,15 @@ Scaling: $`aX + b \sim N(a\mu+b, a^2\sigma^2)`$; $`X \sim \mathrm{Exp}(\lambda) 
 
 ## 2. Expectation, variance, inequalities
 ```math
-\operatorname{var}X = \mathbb{E}X^2 - (\mathbb{E}X)^2, \qquad \operatorname{cov}(X,Y) = \mathbb{E}XY - \mathbb{E}X\,\mathbb{E}Y, \qquad \operatorname{var}(aX+b) = a^2\operatorname{var}X
+\mathrm{var}\,X = \mathbb{E}X^2 - (\mathbb{E}X)^2, \qquad \mathrm{cov}(X,Y) = \mathbb{E}XY - \mathbb{E}X\,\mathbb{E}Y, \qquad \mathrm{var}(aX+b) = a^2\mathrm{var}\,X
 ```
 ```math
-\operatorname{var}\Big(\sum_i X_i\Big) = \sum_i \operatorname{var}X_i + 2\sum_{i<j}\operatorname{cov}(X_i,X_j), \qquad \rho = \frac{\operatorname{cov}(X,Y)}{\sigma_X\sigma_Y} \in [-1,1]
+\mathrm{var}\Big(\sum_i X_i\Big) = \sum_i \mathrm{var}\,X_i + 2\sum_{i<j}\mathrm{cov}(X_i,X_j), \qquad \rho = \frac{\mathrm{cov}(X,Y)}{\sigma_X\sigma_Y} \in [-1,1]
 ```
 | Inequality | Statement | Condition |
 |---|---|---|
 | Markov | $`\mathbb{P}(X \ge z) \le \mathbb{E}X/z`$ | $`X \ge 0`$, $`z > 0`$ |
-| Chebyshev | $`\mathbb{P}(\lvert Y - \mathbb{E}Y\rvert \ge \epsilon) \le \operatorname{var}Y/\epsilon^2`$ | finite variance |
+| Chebyshev | $`\mathbb{P}(\lvert Y - \mathbb{E}Y\rvert \ge \epsilon) \le \mathrm{var}\,Y/\epsilon^2`$ | finite variance |
 | Chernoff | $`\mathbb{P}(X \ge a) \le e^{-ta}M_X(t)`$, then optimise over $`t > 0`$ | mgf finite |
 | SRW Chernoff | $`\mathbb{P}(\lvert S_n\rvert > na) \le 2e^{-na^2/2}`$ | $`\pm1`$ steps, uses $`\cosh t \le e^{t^2/2}`$ |
 
@@ -88,7 +88,7 @@ X_n \to X \text{ a.s.} \;\Longrightarrow\; X_n \xrightarrow{P} X \;\Longrightarr
 | Uniqueness / continuity | yes | yes, if finite on $`[-t_0,t_0]`$ | yes, always |
 
 ```math
-\mathbb{E}X = G'(1), \qquad \operatorname{var}X = G''(1) + G'(1) - G'(1)^2, \qquad \mathbb{E}S = \mathbb{E}N\,\mathbb{E}X \ \text{(random sum)} †
+\mathbb{E}X = G'(1), \qquad \mathrm{var}\,X = G''(1) + G'(1) - G'(1)^2, \qquad \mathbb{E}S = \mathbb{E}N\,\mathbb{E}X \ \text{(random sum)} †
 ```
 
 ---
@@ -149,7 +149,7 @@ f_{X+Y}(u) = \int f_{X,Y}(v, u-v)\,dv \overset{\text{indep}}{=} \int f_X(v)f_Y(u
 | a.s. vs in probability vs in distribution | the event $`\{X_n \to X\}`$ has probability 1 / $`\mathbb{P}(\lvert X_n - X\rvert < \epsilon) \to 1`$ for each $`\epsilon`$ / cdfs converge at continuity points (distributions only) |
 | WLLN vs SLLN | convergence of $`S_n/n`$ in probability vs almost surely |
 | LLN vs CLT | where $`S_n`$ concentrates ($`n\mu`$) vs size ($`\sigma\sqrt n`$) and shape (normal) of fluctuations |
-| Uncorrelated vs independent | $`\operatorname{cov} = 0`$ vs everything factorises; not equivalent in general (they are for jointly normal variables) |
+| Uncorrelated vs independent | $`\mathrm{cov} = 0`$ vs everything factorises; not equivalent in general (they are for jointly normal variables) |
 | Pairwise vs mutual independence | pairs vs every finite sub-family |
 | pgf vs mgf vs cf | non-negative integers vs needs exponential tails vs always exists |
 | $`G''(1)`$ vs $`\mathbb{E}X^2`$ | factorial moment $`\mathbb{E}X(X-1)`$ vs second moment |
